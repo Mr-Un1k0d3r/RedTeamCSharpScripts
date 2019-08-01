@@ -55,7 +55,7 @@ Mr.Un1k0d3r,Mr.Un1k0d3r@corp.com,
 
 A simple RAT that execute command over HTTP. The code is calling back every 10 seconds and will execute the data present on the callback URL.
 
-``rat.exe callbackurl`
+`rat.exe callbackurl`
 
 The data is obfuscated using the following python trick
 
