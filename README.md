@@ -1,6 +1,35 @@
 # RedTeamCSharpScripts
 C# Script used for Red Team. These binaries can be used by Cobalt Strike execute-assembly or as standalone executable. 
 
+
+# LDAP utility
+
+LDAP utility contains several LDAP query that will return all the valuable information you are looking for.
+
+The utility support the following options
+
+```
+DumpAllUsers        Dump all the users 
+DumpUser            Dump user information based on the samaccountname provided
+DumpUsersEmail      Dump all users and email addresses
+DumpAllComputers    Dump all computers
+DumpComputer        Dump a computer information based on the name provided
+DumpAllGroups       Dump all groups
+DumpGroup           Dump a group information based on the name provided
+```
+
+```
+Usage: ldaputility.exe options domain [arguments]
+
+ldaputility.exe DumpAllUsers RingZer0
+ldaputility.exe DumpUser RingZer0 mr.un1k0d3r
+ldaputility.exe DumpUsersEmail RingZer0
+ldaputility.exe DumpAllComputers RingZer0 
+ldaputility.exe DumpComputer RingZer0 DC01
+ldaputility.exe DumpAllGroups RingZer0
+ldaputility.exe DumpGroup RingZer0 "Domain Admins"
+```
+
 # enumerateuser.cs
 
 List all the users samaccountname & mail
