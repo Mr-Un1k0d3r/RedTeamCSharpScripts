@@ -176,6 +176,20 @@ namespace LdapUtility
                         Console.WriteLine("ERROR: DumpGroup required a group name argument");
                     } 
                 }
+                else if (option == "DumpPasswordPolicy")
+                {
+                    string query = "";
+                    string properties = "name,msDS-MinimumPasswordLength,msDS-PasswordHistoryLength,msDS-PasswordComplexityEnabled,msDS-PasswordReversibleEncryptionEnabled,msDS-LockoutThreshold,msDS-PasswordSettingsPrecedence";
+                    try
+                    {
+                        query = "(&(objectClass=msDS-PasswordSettings))";
+                        LdapQuery(domain, query, properties);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("ERROR: DumpPasswordPolicy catched an unexpected exception");
+                    } 
+                }
                 else
                 {
                     Console.WriteLine("Invalid argument: {0} not found", option);
