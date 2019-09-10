@@ -179,7 +179,7 @@ namespace LdapUtility
                 else if (option == "DumpPasswordPolicy")
                 {
                     string query = "";
-                    string properties = "name,msDS-MinimumPasswordLength,msDS-PasswordHistoryLength,msDS-PasswordComplexityEnabled,msDS-PasswordReversibleEncryptionEnabled,msDS-LockoutThreshold,msDS-PasswordSettingsPrecedence";
+                    string properties = "name,distinguishedName,msDS-MinimumPasswordLength,msDS-PasswordHistoryLength,msDS-PasswordComplexityEnabled,msDS-PasswordReversibleEncryptionEnabled,msDS-LockoutThreshold,msDS-PasswordSettingsPrecedence";
                     try
                     {
                         query = "(&(objectClass=msDS-PasswordSettings))";
