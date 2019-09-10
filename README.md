@@ -16,6 +16,7 @@ DumpAllComputers    Dump all computers
 DumpComputer        Dump a computer information based on the name provided
 DumpAllGroups       Dump all groups
 DumpGroup           Dump a group information based on the name provided
+DumpPasswordPolicy  Dump domain password policy
 ```
 
 ```
@@ -28,6 +29,7 @@ ldaputility.exe DumpAllComputers RingZer0
 ldaputility.exe DumpComputer RingZer0 DC01
 ldaputility.exe DumpAllGroups RingZer0
 ldaputility.exe DumpGroup RingZer0 "Domain Admins"
+ldaputility.exe DumpPasswordPolicy RingZer0
 ```
 
 # enumerateuser.cs
