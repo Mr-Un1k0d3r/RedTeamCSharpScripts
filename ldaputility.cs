@@ -18,6 +18,14 @@ namespace LdapUtility
         [DllImport("kernel32.dll")]
         static extern IntPtr GetConsoleWindow();
 
+        static void ShowDebug(Exception e, bool show)
+        {
+            if (show)
+            {
+                Console.WriteLine("DEBUG: {0}", e.Message.ToString());
+            }
+        }
+
         static string FormatProperties(ResultPropertyValueCollection r)
         {
             StringBuilder sb = new StringBuilder();
@@ -67,20 +75,22 @@ namespace LdapUtility
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("ERROR: {0}", e.Message);
+                    Console.WriteLine("ERROR: {0}", e.Message.ToString());
                 }
             }
         }
 
         static void Main(string[] args)
         {
+            bool verboseDebug = Array.Exists(args, match => match.ToLower() == "-verbose");
+
             // ShowWindow(GetConsoleWindow(), 0);
             if (args.Length >= 2)
             {
-                string option = args[0];
+                string option = args[0].ToLower();
                 string domain = args[1];
 
-                if (option == "DumpAllUsers")
+                if (option == "dumpallusers")
                 {
                     string query = "";
                     string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword";
@@ -92,21 +102,25 @@ namespace LdapUtility
                     catch (Exception e)
                     {
                         Console.WriteLine("ERROR: DumpAllUsers catched an unexpected exception");
-                    } 
+                        ShowDebug(e, verboseDebug);
+                    }
                 }
-                else if (option == "DumpUser")
+                else if (option == "dumpuser")
                 {
                     string query = "";
-                    string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword"; 
+                    string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword";
                     try
                     {
                         query = "(&(objectClass=user)(samaccountname=*" + args[2] + "*))";
                         LdapQuery(domain, query, properties);
-                    } catch(Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         Console.WriteLine("ERROR: DumpUser required a user argument");
-                    } 
+                        ShowDebug(e, verboseDebug);
+                    }
                 }
-                else if (option == "DumpUsersEmail")
+                else if (option == "dumpusersemail")
                 {
                     string query = "";
                     string properties = "name,samaccountname,mail";
@@ -118,9 +132,10 @@ namespace LdapUtility
                     catch (Exception e)
                     {
                         Console.WriteLine("ERROR: DumpUsersEmail catched an unexpected exception");
-                    } 
+                        ShowDebug(e, verboseDebug);
+                    }
                 }
-                else if (option == "DumpAllComputers")
+                else if (option == "dumpallcomputers")
                 {
                     string query = "";
                     string properties = "name,displayname,operatingsystem,description,adspath,objectcategory,serviceprincipalname,distinguishedname,cn,lastlogon";
@@ -132,9 +147,10 @@ namespace LdapUtility
                     catch (Exception e)
                     {
                         Console.WriteLine("ERROR: DumpAllComputers catched an unexpected exception");
-                    } 
+                        ShowDebug(e, verboseDebug);
+                    }
                 }
-                else if (option == "DumpComputer")
+                else if (option == "dumpcomputer")
                 {
                     string query = "";
                     string properties = "name,displayname,operatingsystem,description,adspath,objectcategory,serviceprincipalname,distinguishedname,cn,lastlogon";
@@ -146,9 +162,10 @@ namespace LdapUtility
                     catch (Exception e)
                     {
                         Console.WriteLine("ERROR: DumpComputer required a computer name argument");
-                    } 
+                        ShowDebug(e, verboseDebug);
+                    }
                 }
-                else if (option == "DumpAllGroups")
+                else if (option == "dumpallgroups")
                 {
                     string query = "";
                     string properties = "name,adspath,distinguishedname,member,memberof";
@@ -160,9 +177,10 @@ namespace LdapUtility
                     catch (Exception e)
                     {
                         Console.WriteLine("ERROR: DumpAllGroups required a computer name argument");
-                    } 
+                        ShowDebug(e, verboseDebug);
+                    }
                 }
-                else if (option == "DumpGroup")
+                else if (option == "dumpgroup")
                 {
                     string query = "";
                     string properties = "name,adspath,distinguishedname,member,memberof";
@@ -174,9 +192,10 @@ namespace LdapUtility
                     catch (Exception e)
                     {
                         Console.WriteLine("ERROR: DumpGroup required a group name argument");
-                    } 
+                        ShowDebug(e, verboseDebug);
+                    }
                 }
-                else if (option == "DumpPasswordPolicy")
+                else if (option == "dumppasswordpolicy")
                 {
                     string query = "";
                     string properties = "name,distinguishedName,msDS-MinimumPasswordLength,msDS-PasswordHistoryLength,msDS-PasswordComplexityEnabled,msDS-PasswordReversibleEncryptionEnabled,msDS-LockoutThreshold,msDS-PasswordSettingsPrecedence";
@@ -188,7 +207,8 @@ namespace LdapUtility
                     catch (Exception e)
                     {
                         Console.WriteLine("ERROR: DumpPasswordPolicy catched an unexpected exception");
-                    } 
+                        ShowDebug(e, verboseDebug);
+                    }
                 }
                 else
                 {
