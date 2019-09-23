@@ -32,6 +32,20 @@ ldaputility.exe DumpGroup RingZer0 "Domain Admins"
 ldaputility.exe DumpPasswordPolicy RingZer0
 ```
 
+# WMI Utility
+
+Set of predefined WMI query that can be used to query CIM classes.
+
+The utility support the following options
+
+```
+Usage: WMIUtility.exe options [arguments]
+
+ListProcess     Return a list of running process
+ListService     List all the services
+Query           Args (query, columns) wmiutility.exe Query "Select * From Win32_CommandLineAccess" "Name,Description"
+```
+
 # enumerateuser.cs
 
 List all the users samaccountname & mail
