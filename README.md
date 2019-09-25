@@ -90,7 +90,9 @@ import os
 path = sys.argv[1]
 cmd = sys.argv[2]
 
-os.remove(path)
+if os.path.exists(path):
+        os.remove(path)
+        
 open(path, "w+").write(base64.b64encode(cmd)[::-1])
 print "Command added"
 ```
