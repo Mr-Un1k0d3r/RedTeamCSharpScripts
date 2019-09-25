@@ -64,7 +64,7 @@ namespace CSharpUtility
                     MD5 md5 = MD5.Create();
                     string md5Result = Encoding.ASCII.GetString(md5.ComputeHash(Encoding.ASCII.GetBytes(run)));
 
-                    if (md5Result.Equals(currentMd5))
+                    if (!md5Result.Equals(currentMd5))
                     {
                         if (run.Length > 0)
                         {
