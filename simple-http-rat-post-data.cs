@@ -47,7 +47,7 @@ namespace CSharpUtility
             
         }
 
-        static void SendRequest(string url, string data)
+        static byte[] SendRequest(string url, string data)
         {
             WebClient client = new WebClient();
             IWebProxy defaultProxy = WebRequest.DefaultWebProxy;
@@ -67,6 +67,7 @@ namespace CSharpUtility
                 dataPost = dataPost.Replace("A", "!)(*&#:<]");
                 client.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
                 client.UploadString(url, dataPost);
+                return new byte[] { };
             }
         }
 
