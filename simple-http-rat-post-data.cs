@@ -47,7 +47,7 @@ namespace CSharpUtility
             
         }
 
-        static byte[] SendRequest(string url, string data)
+        static void SendRequest(string url, string data)
         {
             WebClient client = new WebClient();
             IWebProxy defaultProxy = WebRequest.DefaultWebProxy;
