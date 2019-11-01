@@ -32,6 +32,18 @@ ldaputility.exe DumpGroup RingZer0 "Domain Admins"
 ldaputility.exe DumpPasswordPolicy RingZer0
 ```
 
+# Cookies Monster
+
+Fetch Chrome cookie in plaintext. Perfect to steal a target session cookie through execute-assembly
+
+```
+Usage: CookiesMonster.exe filter
+```
+
+The filter argument is optional. If not specified it will dump all the cookies. Since the cookies are encrypted using ProtectedMemory Windows APIs you need to have access to the current user context to be able to generate the proper decryption key. 
+
+The binary need to be compiled statically to include the System.Data.SQLite dll.
+
 # WMI Utility
 
 Set of predefined WMI query that can be used to query CIM classes.
