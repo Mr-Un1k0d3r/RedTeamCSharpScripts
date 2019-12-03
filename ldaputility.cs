@@ -93,7 +93,7 @@ namespace LdapUtility
                 if (option == "dumpallusers")
                 {
                     string query = "";
-                    string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword";
+                    string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword,scriptpath";
                     try
                     {
                         query = "(&(objectClass=user))";
@@ -108,7 +108,7 @@ namespace LdapUtility
                 else if (option == "dumpuser")
                 {
                     string query = "";
-                    string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword";
+                    string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword,scriptpath";
                     try
                     {
                         query = "(&(objectClass=user)(samaccountname=*" + args[2] + "*))";
