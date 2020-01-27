@@ -210,6 +210,42 @@ namespace LdapUtility
                         ShowDebug(e, verboseDebug);
                     }
                 }
+                else if (option == "dumppwdlastset")
+                {
+                    // Based on https://www.trustedsec.com/blog/targeted-active-directory-host-enumeration/
+                    string query = "";
+                    string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword,scriptpath";
+                    var date = DateTime.Today.AddDays(-(DateTime.Today.Day + 90));
+                    long dateUtc = date.ToFileTimeUtc();
+                    try
+                    {
+                        query = "(&(objectCategory=Computer)(pwdlastset>="+ dateUtc.ToString() + ")(operatingSystem=*windows*))";
+                        LdapQuery(domain, query, properties);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("ERROR: DumpPasswordPolicy catched an unexpected exception");
+                        ShowDebug(e, verboseDebug);
+                    }
+                }
+                else if (option == "dumplastlogon")
+                {
+                    // Based on https://www.trustedsec.com/blog/targeted-active-directory-host-enumeration/
+                    string query = "";
+                    string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword,scriptpath";
+                    var date = DateTime.Today.AddDays(-(DateTime.Today.Day + 90));
+                    long dateUtc = date.ToFileTimeUtc();
+                    try
+                    {
+                        query = "(&(objectCategory=Computer)(lastLogon>=" + dateUtc.ToString() + ")(operatingSystem=*windows*))";
+                        LdapQuery(domain, query, properties);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("ERROR: DumpPasswordPolicy catched an unexpected exception");
+                        ShowDebug(e, verboseDebug);
+                    }
+                }
                 else
                 {
                     Console.WriteLine("Invalid argument: {0} not found", option);

@@ -30,6 +30,8 @@ ldaputility.exe DumpComputer RingZer0 DC01
 ldaputility.exe DumpAllGroups RingZer0
 ldaputility.exe DumpGroup RingZer0 "Domain Admins"
 ldaputility.exe DumpPasswordPolicy RingZer0
+ldaputility.exe DumpPwdLastSet RingZer0
+ldaputility.exe DumpLastLogon RingZer0
 ```
 
 # Cookies Monster
