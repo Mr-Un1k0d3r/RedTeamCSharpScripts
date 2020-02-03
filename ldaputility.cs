@@ -56,6 +56,8 @@ namespace LdapUtility
             DirectorySearcher ds = new DirectorySearcher(de);
 
             ds.Filter = query;
+            ds.PageSize = Int32.MaxValue;
+            
             foreach (SearchResult r in ds.FindAll())
             {
                 try
