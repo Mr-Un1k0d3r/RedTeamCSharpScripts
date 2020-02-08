@@ -40,7 +40,7 @@ while(not isExit):
         cmd = ""
         data = ""
         try:
-                cmd, data = input.split(" ", 2)
+                cmd, data = input.split(" ", 1)
                 cmd = cmd.lower()
         except:
                 cmd = input
