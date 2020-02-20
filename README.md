@@ -17,6 +17,7 @@ DumpComputer        Dump a computer information based on the name provided
 DumpAllGroups       Dump all groups
 DumpGroup           Dump a group information based on the name provided
 DumpPasswordPolicy  Dump domain password policy
+CheckManaged        Check GPOs for managedby objects    
 ```
 
 ```
@@ -32,7 +33,10 @@ ldaputility.exe DumpGroup RingZer0 "Domain Admins"
 ldaputility.exe DumpPasswordPolicy RingZer0
 ldaputility.exe DumpPwdLastSet RingZer0
 ldaputility.exe DumpLastLogon RingZer0
+ldaputility.exe CheckManaged RingZer0
 ```
+
+The `-verbose` switch can be added to get verbose output.
 
 # Cookies Monster
 
