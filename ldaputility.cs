@@ -6,6 +6,7 @@ using System.Threading;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.DirectoryServices;
+using System.IO;
 
 namespace LdapUtility
 {
@@ -47,7 +48,7 @@ namespace LdapUtility
             return p.ToString(); ;
         }
 
-        static void LdapQuery(string domain, string query, string properties)
+        static void LdapQuery(string domain, string query, string properties, bool showNull = true)
         {
             Console.WriteLine("Connecting to: LDAP://{0}", domain);
             Console.WriteLine("Querying:      {0}", query);
@@ -57,7 +58,7 @@ namespace LdapUtility
 
             ds.Filter = query;
             ds.PageSize = Int32.MaxValue;
-            
+
             foreach (SearchResult r in ds.FindAll())
             {
                 try
@@ -65,13 +66,19 @@ namespace LdapUtility
                     StringBuilder sb = new StringBuilder();
                     foreach (string prop in properties.Split(','))
                     {
-                        sb.Append(prop + new string(' ', 20 - prop.Length) + ": ");
                         Int32 item = r.Properties[prop].Count;
                         if (item > 0)
                         {
+                            sb.Append(prop + new string(' ', 20 - prop.Length) + ": ");
                             sb.Append(item > 1 ? "[" + FormatProperties(r.Properties[prop]) + "]" : FormatTime(r.Properties[prop][0]));
+                            sb.Append("\r\n");
+                        } else
+                        {
+                            if(showNull)
+                            {
+                                sb.Append(prop + new string(' ', 20 - prop.Length) + ":\r\n");
+                            }
                         }
-                        sb.Append("\r\n");
                     }
                     Console.WriteLine(sb.ToString());
                 }
@@ -80,6 +87,50 @@ namespace LdapUtility
                     Console.WriteLine("ERROR: {0}", e.Message.ToString());
                 }
             }
+        }
+
+        static bool ListFilesSearchForManaged(string path, bool verbose = false)
+        {
+            Console.WriteLine("Searching GPOs located at " + path);
+            bool managedFound = false;
+            foreach (string directory in Directory.GetDirectories(path))
+            {
+                foreach (string subdirectory in Directory.GetDirectories(directory))
+                {
+                    if(subdirectory.ToLower().EndsWith("policies"))
+                    {
+                        foreach (string policy in Directory.GetDirectories(subdirectory))
+                        {
+                            try
+                            {
+                                foreach (string file in Directory.GetFiles(policy + "\\machine\\preferences\\groups\\"))
+                                {
+                                    if (file.ToLower().EndsWith("groups.xml"))
+                                    {
+                                        using (StreamReader reader = new StreamReader(file))
+                                        {
+                                            string data = reader.ReadToEnd();
+                                            if (data.Contains("(objectCategory=user)(objectClass=user)(distinguishedName=%managedBy%)"))
+                                            {
+                                                managedFound = true;
+                                                Console.WriteLine(file + " contained managedby information");
+                                                if(verbose)
+                                                {
+                                                    Console.WriteLine(data);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch
+                            {
+
+                            }
+                        }
+                    }  
+                }
+            }
+            return managedFound;
         }
 
         static void Main(string[] args)
@@ -221,13 +272,50 @@ namespace LdapUtility
                     long dateUtc = date.ToFileTimeUtc();
                     try
                     {
-                        query = "(&(objectCategory=Computer)(pwdlastset>="+ dateUtc.ToString() + ")(operatingSystem=*windows*))";
+                        query = "(&(objectCategory=computer)(pwdlastset>=" + dateUtc.ToString() + ")(operatingSystem=*windows*))";
                         LdapQuery(domain, query, properties);
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine("ERROR: DumpPasswordPolicy catched an unexpected exception");
                         ShowDebug(e, verboseDebug);
+                    }
+                }
+                else if (option == "checkmanaged")
+                {
+                    /*
+
+                    */
+                    if(ListFilesSearchForManaged("\\\\" + domain + "\\SYSVOL", verboseDebug))
+                    {
+                        string query = "";
+                        string properties = "samaccountname,managedobjects";
+                        Console.WriteLine("Users that have a managedobjects attribute");
+                        try
+                        {
+                            query = "(&(objectClass=user))";
+                            LdapQuery(domain, query, properties, false);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("ERROR: checkmanaged on users catched an unexpected exception");
+                            ShowDebug(e, verboseDebug);
+                        }
+                        Console.WriteLine("Computers that have a managedby attribute");
+                        properties = "name,managedby";
+                        try
+                        {
+                            query = "(&(objectClass=computer))";
+                            LdapQuery(domain, query, properties, false);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("ERROR: checkmanaged on computers catched an unexpected exception");
+                            ShowDebug(e, verboseDebug);
+                        }
+                    } else
+                    {
+                        Console.WriteLine("Managedby GPO not found");
                     }
                 }
                 else if (option == "dumplastlogon")
@@ -239,7 +327,7 @@ namespace LdapUtility
                     long dateUtc = date.ToFileTimeUtc();
                     try
                     {
-                        query = "(&(objectCategory=Computer)(lastLogon>=" + dateUtc.ToString() + ")(operatingSystem=*windows*))";
+                        query = "(&(objectCategory=computer)(lastLogon>=" + dateUtc.ToString() + ")(operatingSystem=*windows*))";
                         LdapQuery(domain, query, properties);
                     }
                     catch (Exception e)
