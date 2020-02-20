@@ -38,6 +38,14 @@ ldaputility.exe CheckManaged RingZer0
 
 The `-verbose` switch can be added to get verbose output.
 
+### The CheckManaged feature
+
+Active Directory support the following two attributes `managedobjects` and `managedby`. These attributes can be used to assign a manager to an object. It can be a user managing a computer. There is a GPO that can be used to grant local admin to managedobjects owner. The user will not be listed as a local admin by default by the correlation between `managedby` and `managedobjects` can identify users that managed computers.
+
+The `CheckManaged` feature first confirm the presence of the GPO in question by looking at the SYSVOL policies present on the DC. If the `groups.xml` is present, it dump all the users with a `managedobjects` attribute and the computers with a `managedby` attribute.
+
+![managedexample](https://raw.githubusercontent.com/Mr-Un1k0d3r/RedTeamCSharpScripts/master/managed.png)
+
 # Cookies Monster
 
 Fetch Chrome cookie in plaintext. Perfect to steal a target session cookie through execute-assembly
