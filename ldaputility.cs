@@ -95,7 +95,7 @@ namespace LdapUtility
                 if (option == "dumpallusers")
                 {
                     string query = "";
-                    string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword,scriptpath";
+                    string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword,scriptpath,managedby,managedobjects";
                     try
                     {
                         query = "(&(objectClass=user))";
@@ -110,7 +110,7 @@ namespace LdapUtility
                 else if (option == "dumpuser")
                 {
                     string query = "";
-                    string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword,scriptpath";
+                    string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword,scriptpath,managedby,managedobjects";
                     try
                     {
                         query = "(&(objectClass=user)(samaccountname=*" + args[2] + "*))";
@@ -140,7 +140,7 @@ namespace LdapUtility
                 else if (option == "dumpallcomputers")
                 {
                     string query = "";
-                    string properties = "name,displayname,operatingsystem,description,adspath,objectcategory,serviceprincipalname,distinguishedname,cn,lastlogon";
+                    string properties = "name,displayname,operatingsystem,description,adspath,objectcategory,serviceprincipalname,distinguishedname,cn,lastlogon,managedby,managedobjects";
                     try
                     {
                         query = "(&(objectClass=computer))";
@@ -155,7 +155,7 @@ namespace LdapUtility
                 else if (option == "dumpcomputer")
                 {
                     string query = "";
-                    string properties = "name,displayname,operatingsystem,description,adspath,objectcategory,serviceprincipalname,distinguishedname,cn,lastlogon";
+                    string properties = "name,displayname,operatingsystem,description,adspath,objectcategory,serviceprincipalname,distinguishedname,cn,lastlogon,managedby,managedobjects";
                     try
                     {
                         query = "(&(objectClass=computer)(name=*" + args[2] + "))";
