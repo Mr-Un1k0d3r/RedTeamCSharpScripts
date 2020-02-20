@@ -66,6 +66,10 @@ namespace LdapUtility
                     StringBuilder sb = new StringBuilder();
                     foreach (string prop in properties.Split(','))
                     {
+                        if(prop.ToLower().StartsWith("managed") && r.Properties[prop].Count <= 0)
+                        {
+                            break;
+                        } 
                         Int32 item = r.Properties[prop].Count;
                         if (item > 0)
                         {
@@ -80,7 +84,10 @@ namespace LdapUtility
                             }
                         }
                     }
-                    Console.WriteLine(sb.ToString());
+                    if (sb.Length > 0)
+                    {
+                        Console.WriteLine(sb.ToString());
+                    }
                 }
                 catch (Exception e)
                 {
@@ -289,7 +296,7 @@ namespace LdapUtility
                     if(ListFilesSearchForManaged("\\\\" + domain + "\\SYSVOL", verboseDebug))
                     {
                         string query = "";
-                        string properties = "samaccountname,managedobjects";
+                        string properties = "managedobjects,samaccountname";
                         Console.WriteLine("Users that have a managedobjects attribute");
                         try
                         {
@@ -302,7 +309,7 @@ namespace LdapUtility
                             ShowDebug(e, verboseDebug);
                         }
                         Console.WriteLine("Computers that have a managedby attribute");
-                        properties = "name,managedby";
+                        properties = "managedby,name";
                         try
                         {
                             query = "(&(objectClass=computer))";
