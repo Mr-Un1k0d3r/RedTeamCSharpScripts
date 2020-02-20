@@ -143,3 +143,5 @@ if($_SERVER['REQUEST_METHOD'] === "POST") {
 # Credit
 
 Mr.Un1k0d3r RingZer0 Team
+
+Tazz0 RingZer0 Team
