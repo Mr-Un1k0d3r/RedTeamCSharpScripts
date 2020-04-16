@@ -67,9 +67,21 @@ The utility support the following options
 ```
 Usage: WMIUtility.exe options [arguments]
 
-ListProcess     Return a list of running process
-ListService     List all the services
-Query           Args (query, columns) wmiutility.exe Query "Select * From Win32_CommandLineAccess" "Name,Description"
+ListProcess         Return a list of running process
+ListService         List all the services
+Query               Args (query, columns) wmiutility.exe Query "Select * From Win32_CommandLineAccess" "Name,Description"
+
+ListRemoteProcess   Return a list of running process on the target host
+ListRemoteService   Return a list of all the services on the target host
+Get-EventForUser    Search for 4624 events targeting specific user
+RemoteQuery         Args (query, columns) 
+
+EX:
+wmiutility.exe ListRemoteProcess <ComputerName> <Username> <Password>
+wmiutility.exe ListRemoteService <ComputerName> <Username> <Password>
+wmiutility.exe Get-EventForUser <samAccountname> <DomainController> <Username> <Password>
+wmiutility.exe Get-EventForUser <samAccountname> all <Username> <Password>
+wmiutility.exe RemoteQuery "Select * From Win32_CommandLineAccess" "Name,Description" <ComputerName> <Username> <Password>
 ```
 
 # enumerateuser.cs

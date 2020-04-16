@@ -4,14 +4,140 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Management;
 using System.Threading;
+using System.DirectoryServices;
+using System.DirectoryServices.ActiveDirectory;
 
 namespace WMIUtility
 {
     class Program
     {
-        static string RunQuery(string query, string columns)
+        static string RunRemoteQuery(SelectQuery query, string target = "", string remoteHost = "", string username = "", string password = "")
         {
-            Console.WriteLine("Querying:      {0}", query);
+            StringBuilder sb = new StringBuilder();
+            ConnectionOptions con = new ConnectionOptions();
+            con.Username = username;
+            con.Password = password;
+            if (remoteHost.ToLower() == "all")
+            {
+                Console.WriteLine("[+] Searching on all DC");
+                var domain = Domain.GetComputerDomain();
+                foreach (DomainController dc in domain.DomainControllers)
+                {
+                    ManagementScope ms = new ManagementScope($"\\\\{dc.Name}\\root\\cimv2", con);
+                    try
+                    {
+                        ms.Connect();
+                        bool isConnected = ms.IsConnected;
+                        if (isConnected)
+                        {
+                            Console.WriteLine($"[+] Connected to: {dc.Name}");
+                            Console.WriteLine($"[+] Querying:     {query.QueryString}");
+                            ManagementObjectSearcher searcher = new ManagementObjectSearcher(ms, query);
+                            ManagementObjectCollection entries = searcher.Get();
+                            if (query.QueryString.Contains("Win32_NTLogEvent"))
+                            {
+                                Console.WriteLine($"[+] Searching 4624 events for {target}, this may take a while...");
+                                foreach (ManagementBaseObject entry in entries)
+                                {
+                                    if (entry["Message"].ToString().Contains("Source Network Address"))
+                                    {
+                                        foreach (string item in entry["Message"].ToString().Split('\n'))
+                                        {
+                                            if (item.Contains("Source Network Address:"))
+                                            {
+                                                if (!sb.ToString().Contains($"[!] Previously logged on: {item.Split(':')[1].Trim()}") && item.Split(':')[1].Trim() != "-")
+                                                {
+                                                    Console.WriteLine($"[!] Previously logged on: {item.Split(':')[1].Trim()}");
+                                                    sb.Append($"[!] Previously logged on: {item.Split(':')[1].Trim()}\r\n");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                foreach (ManagementBaseObject item in new ManagementObjectSearcher(ms, query).Get())
+                                {
+                                    foreach (string column in target.Split(','))
+                                    {
+                                        Console.WriteLine(column + new string(' ', 20 - column.Length) + ": ");
+                                        Console.WriteLine(item[column] + "\r\n");
+                                        //sb.Append(column + new string(' ', 20 - column.Length) + ": ");
+                                        //sb.Append(item[column] + "\r\n");
+                                    }
+                                    //sb.Append("\r\n");
+                                }
+                            }
+                            return "";
+                        }
+
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
+            }
+            else
+            {
+                ManagementScope ms = new ManagementScope($"\\\\{remoteHost}\\root\\cimv2", con);
+                try
+                {
+                    ms.Connect();
+                    bool isConnected = ms.IsConnected;
+                    if (isConnected)
+                    {
+                        Console.WriteLine($"[+] Connected to: {remoteHost}");
+                        Console.WriteLine($"[+] Querying:     {query.QueryString}");
+                        ManagementObjectSearcher searcher = new ManagementObjectSearcher(ms, query);
+                        ManagementObjectCollection entries = searcher.Get();
+                        if (query.QueryString.Contains("Win32_NTLogEvent"))
+                        {
+                            Console.WriteLine($"[+] Searching 4624 events for {target}, this may take a while...");
+                            foreach (ManagementBaseObject entry in entries)
+                            {
+                                if (entry["Message"].ToString().Contains("Source Network Address"))
+                                {
+                                    foreach (string item in entry["Message"].ToString().Split('\n'))
+                                    {
+                                        if (item.Contains("Source Network Address:"))
+                                        {
+                                            if (!sb.ToString().Contains($"[!] Previously logged on: {item.Split(':')[1].Trim()}") && item.Split(':')[1].Trim() != "-")
+                                            {
+                                                Console.WriteLine($"[!] Previously logged on: {item.Split(':')[1].Trim()}");
+                                                sb.Append($"[!] Previously logged on: {item.Split(':')[1].Trim()}\r\n");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            foreach (ManagementBaseObject item in new ManagementObjectSearcher(ms, query).Get())
+                            {
+                                foreach (string column in target.Split(','))
+                                {
+                                    Console.WriteLine(column + new string(' ', 20 - column.Length) + ": ");
+                                    Console.WriteLine(item[column]);
+                                }
+                            }
+                        }
+                        return "";
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+            return sb.ToString();
+        }
+        static string RunLocalQuery(SelectQuery query, string columns)
+        {
+            Console.WriteLine($"Querying:      {query.QueryString}");
             StringBuilder sb = new StringBuilder();
             foreach (ManagementBaseObject item in new ManagementObjectSearcher(query).Get())
             {
@@ -28,30 +154,50 @@ namespace WMIUtility
         {
             if (args.Length >= 1)
             {
-                string option = args[0].ToLower();
-                string query = args.Length >= 2 ? args[1] : "";
-                string columns = args.Length >= 3 ? args[2] : "";
-                if (option == "listprocess")
+                string arg1 = args[0].ToLower();
+                string arg2 = args.Length >= 2 ? args[1] : "";
+                string arg3 = args.Length >= 3 ? args[2] : "";
+                string arg4 = args.Length >= 4 ? args[3] : "";
+                string arg5 = args.Length >= 5 ? args[4] : "";
+                string arg6 = args.Length >= 6 ? args[5] : "";
+
+                if (arg1 == "listprocess")
                 {
-                    Console.WriteLine(RunQuery("Select * From Win32_Process", "CreationDate,ProcessId,ExecutablePath,CommandLine"));
+                    Console.WriteLine(RunLocalQuery(new SelectQuery("Select * From Win32_Process"), "CreationDate,ProcessId,ExecutablePath,CommandLine"));
                 }
-                else if (option == "listservice")
+                if (arg1 == "listremoteprocess")
                 {
-                    Console.WriteLine(RunQuery("Select * From Win32_Service", "Name,ProcessId,Description,DisplayName,State,Status,PathName"));
+                    Console.WriteLine(RunRemoteQuery(new SelectQuery("Select * From Win32_Process"), "CreationDate,ProcessId,ExecutablePath,CommandLine", arg2, arg3, arg4));
                 }
-                else if (option == "query")
+                else if (arg1 == "listservice")
                 {
-                    Console.WriteLine(RunQuery(query, columns));
+                    Console.WriteLine(RunLocalQuery(new SelectQuery("Select * From Win32_Service"), "Name,ProcessId,Description,DisplayName,State,Status,PathName"));
+                }
+                else if (arg1 == "listremoteservice")
+                {
+                    Console.WriteLine(RunRemoteQuery(new SelectQuery("Select * From Win32_Service"), "Name,ProcessId,Description,DisplayName,State,Status,PathName", arg2, arg3, arg4));
+                }
+                else if (arg1 == "get-eventforuser")
+                {
+                    Console.WriteLine(RunRemoteQuery(new SelectQuery($"Select * from Win32_NTLogEvent Where Logfile='Security' and EventCode='4624' and Message Like '%{arg2}%'"), arg2, arg3, arg4, arg5));
+                }
+                else if (arg1 == "remotequery")
+                {
+                    Console.WriteLine(RunRemoteQuery(new SelectQuery(arg2), arg3, arg4, arg5, arg6));
+                }
+                else if (arg1 == "query")
+                {
+                    Console.WriteLine(RunLocalQuery(new SelectQuery(arg2), arg3));
                 }
                 else
                 {
-                    Console.WriteLine("Invalid argument: {0} not found", option);
+                    Console.WriteLine($"Invalid argument: {arg1} not found");
                 }
             }
             else
             {
                 Console.WriteLine("ERROR: missing arguments");
-                Console.WriteLine("Usage: {0} options [arguments]", System.Reflection.Assembly.GetExecutingAssembly().Location);
+                Console.WriteLine($"Usage: {System.Reflection.Assembly.GetExecutingAssembly().Location} options [arguments]");
             }
         }
     }
