@@ -54,6 +54,18 @@ namespace WMIUtility
                                     }
                                 }
                             }
+                            else
+                            {
+                                foreach (ManagementBaseObject item in new ManagementObjectSearcher(ms, query).Get())
+                                {
+                                    foreach (string column in target.Split(','))
+                                    {
+                                        Console.WriteLine(column + new string(' ', 20 - column.Length) + ": ");
+                                        Console.WriteLine(item[column] + "\r\n");
+                                    }
+                                }
+                            }
+                            return "";
                         }
 
                     }
