@@ -80,6 +80,7 @@ EX:
 wmiutility.exe ListRemoteProcess <ComputerName> <Username> <Password>
 wmiutility.exe ListRemoteService <ComputerName> <Username> <Password>
 wmiutility.exe Get-EventForUser <samAccountname> <DomainController> <Username> <Password>
+wmiutility.exe Get-EventForUser <samAccountname> all <Username> <Password>
 wmiutility.exe RemoteQuery "Select * From Win32_CommandLineAccess" "Name,Description" <ComputerName> <Username> <Password>
 ```
 
