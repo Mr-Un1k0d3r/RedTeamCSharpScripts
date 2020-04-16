@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Management;
 using System.Threading;
+using System.DirectoryServices;
+using System.DirectoryServices.ActiveDirectory;
 
 namespace WMIUtility
 {
@@ -15,56 +17,121 @@ namespace WMIUtility
             ConnectionOptions con = new ConnectionOptions();
             con.Username = username;
             con.Password = password;
-            ManagementScope ms = new ManagementScope($"\\\\{remoteHost}\\root\\cimv2", con);
-            try
+            if (remoteHost.ToLower() == "all")
             {
-                ms.Connect();
-                bool isConnected = ms.IsConnected;
-                if (isConnected)
+                Console.WriteLine("[+] Searching on all DC");
+                var domain = Domain.GetComputerDomain();
+                foreach (DomainController dc in domain.DomainControllers)
                 {
-                    Console.WriteLine($"[+] Connected to: {remoteHost}");
-                    Console.WriteLine($"[+] Querying:     {query.QueryString}");
-                    ManagementObjectSearcher searcher = new ManagementObjectSearcher(ms, query);
-                    ManagementObjectCollection entries = searcher.Get();
-                    if (query.QueryString.Contains("Win32_NTLogEvent"))
+                    ManagementScope ms = new ManagementScope($"\\\\{dc.Name}\\root\\cimv2", con);
+                    try
                     {
-                        Console.WriteLine($"[+] Searching 4624 events for {target}, this may take a while...");
-                        foreach (ManagementBaseObject entry in entries)
+                        ms.Connect();
+                        bool isConnected = ms.IsConnected;
+                        if (isConnected)
                         {
-                            if (entry["Message"].ToString().Contains("Source Network Address"))
+                            Console.WriteLine($"[+] Connected to: {dc.Name}");
+                            Console.WriteLine($"[+] Querying:     {query.QueryString}");
+                            ManagementObjectSearcher searcher = new ManagementObjectSearcher(ms, query);
+                            ManagementObjectCollection entries = searcher.Get();
+                            if (query.QueryString.Contains("Win32_NTLogEvent"))
                             {
-                                foreach (string item in entry["Message"].ToString().Split('\n'))
+                                Console.WriteLine($"[+] Searching 4624 events for {target}, this may take a while...");
+                                foreach (ManagementBaseObject entry in entries)
                                 {
-                                    if (item.Contains("Source Network Address:"))
+                                    if (entry["Message"].ToString().Contains("Source Network Address"))
                                     {
-                                        if (!sb.ToString().Contains($"[!] Previously logged on: {item.Split(':')[1].Trim()}") && item.Split(':')[1].Trim() != "-")
+                                        foreach (string item in entry["Message"].ToString().Split('\n'))
                                         {
-                                            sb.Append($"[!] Previously logged on: {item.Split(':')[1].Trim()}\r\n");
+                                            if (item.Contains("Source Network Address:"))
+                                            {
+                                                if (!sb.ToString().Contains($"[!] Previously logged on: {item.Split(':')[1].Trim()}") && item.Split(':')[1].Trim() != "-")
+                                                {
+                                                    Console.WriteLine($"[!] Previously logged on: {item.Split(':')[1].Trim()}");
+                                                    sb.Append($"[!] Previously logged on: {item.Split(':')[1].Trim()}\r\n");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                foreach (ManagementBaseObject item in new ManagementObjectSearcher(ms, query).Get())
+                                {
+                                    foreach (string column in target.Split(','))
+                                    {
+                                        Console.WriteLine(column + new string(' ', 20 - column.Length) + ": ");
+                                        Console.WriteLine(item[column] + "\r\n");
+                                        //sb.Append(column + new string(' ', 20 - column.Length) + ": ");
+                                        //sb.Append(item[column] + "\r\n");
+                                    }
+                                    //sb.Append("\r\n");
+                                }
+                            }
+                            return "";
+                        }
+
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
+            }
+            else
+            {
+                ManagementScope ms = new ManagementScope($"\\\\{remoteHost}\\root\\cimv2", con);
+                try
+                {
+                    ms.Connect();
+                    bool isConnected = ms.IsConnected;
+                    if (isConnected)
+                    {
+                        Console.WriteLine($"[+] Connected to: {remoteHost}");
+                        Console.WriteLine($"[+] Querying:     {query.QueryString}");
+                        ManagementObjectSearcher searcher = new ManagementObjectSearcher(ms, query);
+                        ManagementObjectCollection entries = searcher.Get();
+                        if (query.QueryString.Contains("Win32_NTLogEvent"))
+                        {
+                            Console.WriteLine($"[+] Searching 4624 events for {target}, this may take a while...");
+                            foreach (ManagementBaseObject entry in entries)
+                            {
+                                if (entry["Message"].ToString().Contains("Source Network Address"))
+                                {
+                                    foreach (string item in entry["Message"].ToString().Split('\n'))
+                                    {
+                                        if (item.Contains("Source Network Address:"))
+                                        {
+                                            if (!sb.ToString().Contains($"[!] Previously logged on: {item.Split(':')[1].Trim()}") && item.Split(':')[1].Trim() != "-")
+                                            {
+                                                Console.WriteLine($"[!] Previously logged on: {item.Split(':')[1].Trim()}");
+                                                sb.Append($"[!] Previously logged on: {item.Split(':')[1].Trim()}\r\n");
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
-                    else
-                    {
-                        foreach (ManagementBaseObject item in new ManagementObjectSearcher(ms, query).Get())
+                        else
                         {
-                            foreach (string column in target.Split(','))
+                            foreach (ManagementBaseObject item in new ManagementObjectSearcher(ms, query).Get())
                             {
-                                sb.Append(column + new string(' ', 20 - column.Length) + ": ");
-                                sb.Append(item[column] + "\r\n");
+                                foreach (string column in target.Split(','))
+                                {
+                                    Console.WriteLine(column + new string(' ', 20 - column.Length) + ": ");
+                                    Console.WriteLine(item[column]);
+                                }
                             }
-                            sb.Append("\r\n");
                         }
+                        return "";
                     }
-                    return sb.ToString();
-                }
 
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
             return sb.ToString();
         }
