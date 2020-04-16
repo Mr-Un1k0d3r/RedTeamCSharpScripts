@@ -1,10 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
-using System.Management;
 using System.Threading;
-using System.DirectoryServices;
+using System.Management;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.DirectoryServices.ActiveDirectory;
 
 namespace WMIUtility
@@ -72,7 +71,6 @@ namespace WMIUtility
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e);
                     }
                 }
             }
@@ -100,7 +98,11 @@ namespace WMIUtility
                                     {
                                         if (item.Contains("Source Network Address:"))
                                         {
-                                            if (!sb.ToString().Contains($"[!] Previously logged on: {item.Split(':')[1].Trim()}") && item.Split(':')[1].Trim() != "-")
+                                            if (!sb.ToString().Contains($"[!] Previously logged on: {item.Split(':')[1].Trim()}") 
+                                                && item.Split(':')[1].Trim() != "-"
+                                                && item.Split(':')[1].Trim() != "fe80" 
+                                                && item.Split(':')[1].Trim() != "" 
+                                                && item.Split(':')[1].Trim() != " ")
                                             {
                                                 Console.WriteLine($"[!] Previously logged on: {item.Split(':')[1].Trim()}");
                                                 sb.Append($"[!] Previously logged on: {item.Split(':')[1].Trim()}\r\n");
@@ -116,21 +118,18 @@ namespace WMIUtility
                             {
                                 foreach (string column in target.Split(','))
                                 {
-                                    Console.WriteLine(column + new string(' ', 20 - column.Length) + ": ");
-                                    Console.WriteLine(item[column]);
+                                    Console.WriteLine(column + new string(' ', 20 - column.Length) + ": " + item[column] + "\r\n");
                                 }
                             }
                         }
-                        return "";
                     }
-
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
                 }
             }
-            return sb.ToString();
+            // Using Console.Writeline instead for direct output
+            return "";
         }
         static string RunLocalQuery(SelectQuery query, string columns)
         {
