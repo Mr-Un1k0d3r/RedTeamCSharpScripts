@@ -63,10 +63,7 @@ namespace WMIUtility
                                     {
                                         Console.WriteLine(column + new string(' ', 20 - column.Length) + ": ");
                                         Console.WriteLine(item[column] + "\r\n");
-                                        //sb.Append(column + new string(' ', 20 - column.Length) + ": ");
-                                        //sb.Append(item[column] + "\r\n");
                                     }
-                                    //sb.Append("\r\n");
                                 }
                             }
                             return "";
