@@ -75,6 +75,7 @@ ListRemoteProcess   Return a list of running process on the target host
 ListRemoteService   Return a list of all the services on the target host
 Get-EventForUser    Search for 4624 events targeting specific user
 RemoteQuery         Args (query, columns) 
+Get-Av              Return a list of potential security product
 
 EX:
 wmiutility.exe ListRemoteProcess <ComputerName> <Username> <Password>
@@ -165,3 +166,7 @@ if($_SERVER['REQUEST_METHOD'] === "POST") {
 Mr.Un1k0d3r RingZer0 Team
 
 Tazz0 RingZer0 Team
+
+# Contributors
+
+@theFlink for the AV module
