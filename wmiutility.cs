@@ -146,6 +146,24 @@ namespace WMIUtility
             }
             return sb.ToString();
         }
+
+        static string RunLocalSecurityQuery(string query, string columns)
+        {
+            Console.WriteLine($"Querying:      {query}");
+            string wmipathstr = @"\\" + Environment.MachineName + @"\root\SecurityCenter2";
+            StringBuilder sb = new StringBuilder();
+            foreach (ManagementBaseObject item in new ManagementObjectSearcher(wmipathstr,query).Get())
+            {
+                foreach (string column in columns.Split(','))
+                {
+                    sb.Append(column + new string(' ', 25 - column.Length) + ": ");
+                    sb.Append(item[column] + "\r\n");
+                }
+                sb.Append("\r\n");
+            }
+            return sb.ToString();
+        }
+
         static void Main(string[] args)
         {
             if (args.Length >= 1)
@@ -176,6 +194,10 @@ namespace WMIUtility
                 else if (arg1 == "get-eventforuser")
                 {
                     Console.WriteLine(RunRemoteQuery(new SelectQuery($"Select * from Win32_NTLogEvent Where Logfile='Security' and EventCode='4624' and Message Like '%{arg2}%'"), arg2, arg3, arg4, arg5));
+                }
+                else if(arg1 == "get-av")
+                {
+                    Console.WriteLine(RunLocalSecurityQuery("Select * from AntivirusProduct", "displayName,pathToSignedProductExe,pathToSignedReportingExe"));
                 }
                 else if (arg1 == "remotequery")
                 {
