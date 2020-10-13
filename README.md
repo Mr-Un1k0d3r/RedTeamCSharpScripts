@@ -161,6 +161,17 @@ if($_SERVER['REQUEST_METHOD'] === "POST") {
 ?>
 ```
 
+# set.cs (set.exe)
+
+C# equivalent of Windows set command that does not required to spawn cmd.exe
+
+```
+execute-assembly C:\set.exe
+
+PROCESSOR_ARCHITEW6432=AMD64
+DriverData=C:\Windows\System32\Drivers\DriverData
+```
+
 # Credit
 
 Mr.Un1k0d3r RingZer0 Team
