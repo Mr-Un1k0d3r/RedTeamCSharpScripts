@@ -9,6 +9,7 @@ LDAP utility contains several LDAP query that will return all the valuable infor
 The utility support the following options
 
 ```
+Trust               Dump domain & forest trust
 DumpAllUsers        Dump all the users 
 DumpUser            Dump user information based on the samaccountname provided
 DumpUsersEmail      Dump all users and email addresses
@@ -23,6 +24,7 @@ CheckManaged        Check GPOs for managedby objects
 ```
 Usage: ldaputility.exe options domain [arguments]
 
+ldaputility.exe Trust RingZer0
 ldaputility.exe DumpAllUsers RingZer0
 ldaputility.exe DumpUser RingZer0 mr.un1k0d3r
 ldaputility.exe DumpUsersEmail RingZer0
