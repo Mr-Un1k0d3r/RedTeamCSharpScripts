@@ -20,11 +20,92 @@ namespace LdapUtility
         [DllImport("kernel32.dll")]
         static extern IntPtr GetConsoleWindow();
 
+        [DllImport("Netapi32.dll")]
+        static extern int NetLocalGroupEnum([MarshalAs(UnmanagedType.LPWStr)] string computerName, int level,  out IntPtr bufPtr, int prefMaxLen, out int entriesRead, out int totalEntries, ref int resumeHandle);
+
+        [DllImport("netapi32.dll")]
+        static extern int NetLocalGroupGetMembers([MarshalAs(UnmanagedType.LPWStr)] string computerName, [MarshalAs(UnmanagedType.LPWStr)] string localGroupName, int level, out IntPtr bufPtr, int prefMaxLen, out int entriesRead, out int totalEntries, ref int resumeHandle);
+
+        [DllImport("Netapi32.dll")]
+        static extern uint NetApiBufferFree(IntPtr buffer);
+
+        [DllImport("advapi32.dll")]
+        public static extern bool ConvertSidToStringSid(IntPtr Sid, out IntPtr StringSid);
+
+        static int NERR_Success = 0;
+        static int MAX_PREFERRED_LENGTH = -1;
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct LOCALGROUP_USERS_INFO_1
+        {
+            [MarshalAs(UnmanagedType.LPWStr)] public string name;
+            [MarshalAs(UnmanagedType.LPWStr)] public string comment;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        internal struct LOCALGROUP_MEMBERS_INFO_2
+        {
+            public IntPtr lgrmi2_sid;
+            public int lgrmi2_sidusage;
+            [MarshalAs(UnmanagedType.LPWStr)] public string lgrmi2_domainandname;
+        }
+
         static void ShowDebug(Exception e, bool show)
         {
             if (show)
             {
                 Console.WriteLine("DEBUG: {0}", e.Message.ToString());
+            }
+        }
+        
+        static void DumpLocalAdminGroups(string computer)
+        {
+            IntPtr bufPtr = IntPtr.Zero;
+            int entriesRead = 0;
+            int totalEntries = 0;
+            int resumeHandle = 0;
+            int output = NetLocalGroupEnum(computer, 1, out bufPtr, MAX_PREFERRED_LENGTH, out entriesRead, out totalEntries, ref resumeHandle);
+            long offset = bufPtr.ToInt64();
+
+            if(output == NERR_Success && offset > 0)
+            {
+                int position = Marshal.SizeOf(typeof(LOCALGROUP_USERS_INFO_1));
+                Console.WriteLine("\nComputer {0}\n------------------------", computer);
+                for (int i = 0; i < entriesRead; i++)
+                {
+                    IntPtr nextPtr = new IntPtr(offset);
+                    LOCALGROUP_USERS_INFO_1 data = (LOCALGROUP_USERS_INFO_1)Marshal.PtrToStructure(nextPtr, typeof(LOCALGROUP_USERS_INFO_1));
+                    offset = nextPtr.ToInt64() + position;
+                    Console.WriteLine(data.name);
+                    DumpLocalAdminMembers(computer, data.name);
+                }
+                NetApiBufferFree(bufPtr);
+            } else
+            {
+                Console.WriteLine("Error: Could not list local group for the {0} system. Error {1}.", computer, output);
+            }
+        }
+
+        static void DumpLocalAdminMembers(string computer, string group)
+        {
+            IntPtr bufPtr = IntPtr.Zero;
+            int entriesRead = 0;
+            int totalEntries = 0;
+            int resumeHandle = 0;
+            int output = NetLocalGroupGetMembers(computer, group, 2, out bufPtr, MAX_PREFERRED_LENGTH, out entriesRead, out totalEntries, ref resumeHandle);
+            long offset = bufPtr.ToInt64();
+
+            if (output == NERR_Success && offset > 0)
+            {
+                int position = Marshal.SizeOf(typeof(LOCALGROUP_MEMBERS_INFO_2));
+                for (int i = 0; i < entriesRead; i++)
+                {
+                    IntPtr nextPtr = new IntPtr(offset);
+                    LOCALGROUP_MEMBERS_INFO_2 data = (LOCALGROUP_MEMBERS_INFO_2)Marshal.PtrToStructure(nextPtr, typeof(LOCALGROUP_MEMBERS_INFO_2));
+                    offset = nextPtr.ToInt64() + position;
+                    Console.WriteLine(data.lgrmi2_domainandname);
+                }
+                NetApiBufferFree(bufPtr);
             }
         }
 
@@ -49,8 +130,9 @@ namespace LdapUtility
             return p.ToString(); ;
         }
 
-        static void LdapQuery(string domain, string query, string properties, bool showNull = true)
+        static List<string> LdapQuery(string domain, string query, string properties, bool showNull = true, bool returnList = false)
         {
+            List<string> output = new List<string>();
             Console.WriteLine("Connecting to: LDAP://{0}", domain);
             Console.WriteLine("Querying:      {0}", query);
 
@@ -77,6 +159,10 @@ namespace LdapUtility
                             sb.Append(prop + new string(' ', 20 - prop.Length) + ": ");
                             sb.Append(item > 1 ? "[" + FormatProperties(r.Properties[prop]) + "]" : FormatTime(r.Properties[prop][0]));
                             sb.Append("\r\n");
+                            if(returnList)
+                            {
+                                output.Add(r.Properties[prop][0].ToString());
+                            }
                         }
                         else
                         {
@@ -88,7 +174,10 @@ namespace LdapUtility
                     }
                     if (sb.Length > 0)
                     {
-                        Console.WriteLine(sb.ToString());
+                        if (!returnList)
+                        {
+                            Console.WriteLine(sb.ToString());
+                        }
                     }
                 }
                 catch (Exception e)
@@ -96,6 +185,7 @@ namespace LdapUtility
                     Console.WriteLine("ERROR: {0}", e.Message.ToString());
                 }
             }
+            return output;
         }
 
         static bool ListFilesSearchForManaged(string path, bool verbose = false)
@@ -168,7 +258,37 @@ namespace LdapUtility
                         ShowDebug(e, verboseDebug);
                     }
                 }
-                else if(option == "trust")
+                else if (option == "dumplocaladmin")
+                {
+                    string query = "";
+                    string properties = "name";
+                    string computername = "";
+
+                    try
+                    {
+                          computername = "(name=*" + args[2] + "*)";
+                    } catch
+                    {
+                        computername = "";
+                    }
+
+                    try
+                    {
+                        query = "(&(objectClass=computer)" + computername + ")";
+                        List<string> computers = LdapQuery(domain, query, properties, false, true);
+                        Console.WriteLine(String.Format("Querying {0} computer(s).", computers.Count));
+                        foreach (string c in computers)
+                        {
+                            DumpLocalAdminGroups(c);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("ERROR: DumpLocalAdmin catched an unexpected exception");
+                        ShowDebug(e, verboseDebug);
+                    }
+                }
+                else if (option == "trust")
                 {
                     Console.WriteLine("Domain Trust\n----------------------");
                     Domain currentDomain = Domain.GetCurrentDomain();
