@@ -259,7 +259,7 @@ namespace LdapUtility
                         ShowDebug(e, verboseDebug);
                     }
                 }
-                else if (option == "dumplocaladmin")
+                else if (option == "dumplocalgroup")
                 {
                     string query = "";
                     string properties = "name";
@@ -281,6 +281,37 @@ namespace LdapUtility
                         foreach (string c in computers)
                         {
                             DumpLocalAdminGroups(c);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("ERROR: DumpLocalGroup catched an unexpected exception");
+                        ShowDebug(e, verboseDebug);
+                    }
+                }
+                else if (option == "dumplocaladmin")
+                {
+                    string query = "";
+                    string properties = "name";
+                    string computername = "";
+
+                    try
+                    {
+                        computername = "(name=*" + args[2] + "*)";
+                    }
+                    catch
+                    {
+                        computername = "";
+                    }
+
+                    try
+                    {
+                        query = "(&(objectClass=computer)" + computername + ")";
+                        List<string> computers = LdapQuery(domain, query, properties, false, true);
+                        Console.WriteLine(String.Format("Querying {0} computer(s).", computers.Count));
+                        foreach (string c in computers)
+                        {
+                            DumpLocalAdminMembers(c, "Administrators");
                         }
                     }
                     catch (Exception e)
