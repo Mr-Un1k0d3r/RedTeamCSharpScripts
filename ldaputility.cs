@@ -311,6 +311,7 @@ namespace LdapUtility
                         Console.WriteLine(String.Format("Querying {0} computer(s).", computers.Count));
                         foreach (string c in computers)
                         {
+                            Console.WriteLine("\nComputer {0}\n------------------------", c);
                             DumpLocalAdminMembers(c, "Administrators");
                         }
                     }
