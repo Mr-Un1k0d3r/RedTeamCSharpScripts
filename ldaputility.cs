@@ -6,6 +6,7 @@ using System.Threading;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.DirectoryServices;
+using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 
 namespace LdapUtility
@@ -66,19 +67,20 @@ namespace LdapUtility
                     StringBuilder sb = new StringBuilder();
                     foreach (string prop in properties.Split(','))
                     {
-                        if(prop.ToLower().StartsWith("managed") && r.Properties[prop].Count <= 0)
+                        if (prop.ToLower().StartsWith("managed") && r.Properties[prop].Count <= 0)
                         {
                             break;
-                        } 
+                        }
                         Int32 item = r.Properties[prop].Count;
                         if (item > 0)
                         {
                             sb.Append(prop + new string(' ', 20 - prop.Length) + ": ");
                             sb.Append(item > 1 ? "[" + FormatProperties(r.Properties[prop]) + "]" : FormatTime(r.Properties[prop][0]));
                             sb.Append("\r\n");
-                        } else
+                        }
+                        else
                         {
-                            if(showNull)
+                            if (showNull)
                             {
                                 sb.Append(prop + new string(' ', 20 - prop.Length) + ":\r\n");
                             }
@@ -104,7 +106,7 @@ namespace LdapUtility
             {
                 foreach (string subdirectory in Directory.GetDirectories(directory))
                 {
-                    if(subdirectory.ToLower().EndsWith("policies"))
+                    if (subdirectory.ToLower().EndsWith("policies"))
                     {
                         foreach (string policy in Directory.GetDirectories(subdirectory))
                         {
@@ -121,7 +123,7 @@ namespace LdapUtility
                                             {
                                                 managedFound = true;
                                                 Console.WriteLine(file + " contained managedby information");
-                                                if(verbose)
+                                                if (verbose)
                                                 {
                                                     Console.WriteLine(data);
                                                 }
@@ -129,12 +131,13 @@ namespace LdapUtility
                                         }
                                     }
                                 }
-                            } catch
+                            }
+                            catch
                             {
 
                             }
                         }
-                    }  
+                    }
                 }
             }
             return managedFound;
@@ -163,6 +166,22 @@ namespace LdapUtility
                     {
                         Console.WriteLine("ERROR: DumpAllUsers catched an unexpected exception");
                         ShowDebug(e, verboseDebug);
+                    }
+                }
+                else if(option == "trust")
+                {
+                    Console.WriteLine("Domain Trust\n----------------------");
+                    Domain currentDomain = Domain.GetCurrentDomain();
+                    foreach (TrustRelationshipInformation d in currentDomain.GetAllTrustRelationships())
+                    {
+                        Console.WriteLine(String.Format("{0} <- ({1}){2} -> {3}", d.SourceName, d.TrustType, d.TrustDirection, d.TargetName));
+                    }
+
+                    Console.WriteLine("\nForest Trust\n----------------------");
+                    Forest forest = Forest.GetCurrentForest();
+                    foreach (TrustRelationshipInformation f in forest.GetAllTrustRelationships())
+                    {
+                        Console.WriteLine(String.Format("{0} <- ({1}){2} -> {3}", f.SourceName, f.TrustType, f.TrustDirection, f.TargetName));
                     }
                 }
                 else if (option == "dumpuser")
@@ -293,7 +312,7 @@ namespace LdapUtility
                     /*
 
                     */
-                    if(ListFilesSearchForManaged("\\\\" + domain + "\\SYSVOL", verboseDebug))
+                    if (ListFilesSearchForManaged("\\\\" + domain + "\\SYSVOL", verboseDebug))
                     {
                         string query = "";
                         string properties = "managedobjects,samaccountname";
@@ -320,7 +339,8 @@ namespace LdapUtility
                             Console.WriteLine("ERROR: checkmanaged on computers catched an unexpected exception");
                             ShowDebug(e, verboseDebug);
                         }
-                    } else
+                    }
+                    else
                     {
                         Console.WriteLine("Managedby GPO not found");
                     }
