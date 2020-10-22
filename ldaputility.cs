@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
 using System.IO;
+using System.Collections;
 
 namespace LdapUtility
 {
@@ -288,7 +289,7 @@ namespace LdapUtility
                         ShowDebug(e, verboseDebug);
                     }
                 }
-                else if (option == "trust")
+                else if (option == "dumptrust")
                 {
                     Console.WriteLine("Domain Trust\n----------------------");
                     Domain currentDomain = Domain.GetCurrentDomain();
@@ -490,8 +491,21 @@ namespace LdapUtility
             }
             else
             {
-                Console.WriteLine("ERROR: missing arguments");
-                Console.WriteLine("Usage: {0} options domain [arguments]", System.Reflection.Assembly.GetExecutingAssembly().Location);
+                if (args.Length == 1)
+                {
+                    if (args[0] == "set")
+                    {
+                        foreach (DictionaryEntry de in Environment.GetEnvironmentVariables())
+                        {
+                            Console.WriteLine("{0}={1}", de.Key, de.Value);
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("ERROR: missing arguments");
+                    Console.WriteLine("Usage: {0} options domain [arguments]", System.Reflection.Assembly.GetExecutingAssembly().Location);
+                }
             }
         }
     }
