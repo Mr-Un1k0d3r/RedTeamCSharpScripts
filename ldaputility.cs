@@ -9,6 +9,7 @@ using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Collections;
+using System.Security.Principal;
 
 namespace LdapUtility
 {
@@ -30,11 +31,12 @@ namespace LdapUtility
         [DllImport("Netapi32.dll")]
         static extern uint NetApiBufferFree(IntPtr buffer);
 
-        [DllImport("advapi32.dll")]
-        public static extern bool ConvertSidToStringSid(IntPtr Sid, out IntPtr StringSid);
+        [DllImport("advapi32.dll", EntryPoint = "OpenSCManagerW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern IntPtr OpenSCManager(string machineName, string databaseName, uint dwAccess);
 
-        static int NERR_Success = 0;
-        static int MAX_PREFERRED_LENGTH = -1;
+        [DllImport("advapi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool CloseServiceHandle(IntPtr hSCObject);
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct LOCALGROUP_USERS_INFO_1
@@ -50,6 +52,11 @@ namespace LdapUtility
             public int lgrmi2_sidusage;
             [MarshalAs(UnmanagedType.LPWStr)] public string lgrmi2_domainandname;
         }
+
+        static int NERR_Success = 0;
+        static int MAX_PREFERRED_LENGTH = -1;
+        static uint SC_MANAGER_ALL_ACCESS = 0xF003F;
+        static string SERVICES_ACTIVE_DATABASE = "ServicesActive";
 
         static void ShowDebug(Exception e, bool show)
         {
@@ -108,6 +115,16 @@ namespace LdapUtility
                 }
                 NetApiBufferFree(bufPtr);
             }
+        }
+
+        static void CheckLocalAdminRight(string computer)
+        {
+            IntPtr handle = OpenSCManager(computer, SERVICES_ACTIVE_DATABASE, SC_MANAGER_ALL_ACCESS);
+            if (handle != IntPtr.Zero)
+            {
+                Console.WriteLine("{0} admin on: {1}", WindowsIdentity.GetCurrent().Name, computer);
+                CloseServiceHandle(handle);
+            } 
         }
 
         static string FormatProperties(ResultPropertyValueCollection r)
@@ -318,6 +335,37 @@ namespace LdapUtility
                     catch (Exception e)
                     {
                         Console.WriteLine("ERROR: DumpLocalAdmin catched an unexpected exception");
+                        ShowDebug(e, verboseDebug);
+                    }
+                }
+                else if (option == "checkadmin")
+                {
+                    string query = "";
+                    string properties = "name";
+                    string computername = "";
+
+                    try
+                    {
+                        computername = "(name=*" + args[2] + "*)";
+                    }
+                    catch
+                    {
+                        computername = "";
+                    }
+
+                    try
+                    {
+                        query = "(&(objectClass=computer)" + computername + ")";
+                        List<string> computers = LdapQuery(domain, query, properties, false, true);
+                        Console.WriteLine(String.Format("Querying {0} computer(s).", computers.Count));
+                        foreach (string c in computers)
+                        {
+                            CheckLocalAdminRight(c);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("ERROR: CheckAdmin catched an unexpected exception");
                         ShowDebug(e, verboseDebug);
                     }
                 }
