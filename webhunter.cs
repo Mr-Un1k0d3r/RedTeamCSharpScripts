@@ -127,6 +127,9 @@ namespace ConnectTo
             urls.Add("script/");
             urls.Add("opennms/");
             urls.Add("RDWeb/Pages/en-US/Default.aspx");
+            urls.Add("eam/vib"); 
+            urls.Add("wps/portal/Home");
+            urls.Add("wps/myportal/");
 
             return urls.ToArray();
         }
