@@ -23,8 +23,8 @@ namespace WebHunter
             long current = ip & mask;
             while(current <= ((ip & mask) | ~mask))
             {
-                ips.Add(ToAddr(current));
                 current++;
+                ips.Add(ToAddr(current));
             }
 
             return ips.ToArray();
