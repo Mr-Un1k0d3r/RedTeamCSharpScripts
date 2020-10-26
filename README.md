@@ -56,6 +56,18 @@ The `CheckManaged` feature first confirm the presence of the GPO in question by 
 
 ![managedexample](https://raw.githubusercontent.com/Mr-Un1k0d3r/RedTeamCSharpScripts/master/managed.png)
 
+# Web Hunter 
+
+CSharp version of the Find-Fruit utility https://github.com/rvrsh3ll/Misc-Powershell-Scripts/blob/master/Find-Fruit.ps1. Tool to query network subnet looking for valuable assets that can be exploited. 
+
+```
+webhunter.exe 192.168.1.0/24 80,443,8080,8443
+```
+
+```
+webhunter.exe 192.168.1.0/24 80,443,8080,8443 -verbose
+```
+
 # Cookies Monster
 
 Fetch Chrome cookie in plaintext. Perfect to steal a target session cookie through execute-assembly
