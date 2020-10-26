@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Threading;
 
-namespace WebHunter
+namespace ConnectTo
 {
     class Program
     {
@@ -48,22 +48,36 @@ namespace WebHunter
                 {
                     string http = String.Format("http://{0}:{1}/{2}", host, port, url);
                     string https = String.Format("https://{0}:{1}/{2}", host, port, url);
+                    int code = 404;
                     if(verbose)
                     {
                         Console.WriteLine("Querying {0}", http);
                     }
-                    if(SendRequest(http) == 200)
+                    code = SendRequest(http);
+                    if (code != -1)
                     {
-                        Console.WriteLine("{0} returned 200", http);
+                        Console.WriteLine("{0} returned {1}", http, code);
+                    }
+                    // time out
+                    if(code == -1)
+                    {
+                        if (verbose)
+                        {
+                            Console.WriteLine("Skipping this port since it timed out.");
+                        }
+                        break;
                     }
                     if (verbose)
                     {
                         Console.WriteLine("Querying {0}", https);
                     }
-                    if (SendRequest(https) == 200)
+
+                    code = SendRequest(https);
+                    if (code != -1)
                     {
-                        Console.WriteLine("{0} returned 200", http);
+                        Console.WriteLine("{0} returned {1}", https, code);
                     }
+                    
                 }
             }
         }
@@ -83,6 +97,11 @@ namespace WebHunter
 
             } catch(Exception e)
             {
+                if(e.Message.Contains("The operation has timed out"))
+                {
+                    responseCode = -1;
+                }
+
                 if(verbose)
                 {
                     Console.WriteLine("Error: {0}", e.Message);
@@ -129,7 +148,6 @@ namespace WebHunter
                 ScanHost(ip, ports);
 
             }
-            Thread.Sleep(10000);
         }
     }
 }
