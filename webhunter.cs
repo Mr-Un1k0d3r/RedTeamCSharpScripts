@@ -21,7 +21,7 @@ namespace ConnectTo
             List<string> ips = new List<string>();
 
             long current = ip & mask;
-            while (current <= ((ip & mask) | ~mask))
+            while (current < ((ip & mask) | ~mask))
             {
                 current++;
                 ips.Add(ToAddr(current));
