@@ -48,34 +48,39 @@ namespace ConnectTo
                 {
                     string http = String.Format("http://{0}:{1}/{2}", host, port, url);
                     string https = String.Format("https://{0}:{1}/{2}", host, port, url);
-                    int code = 404;
+                    int httpCode = 404;
+                    int httpsCode = 404;
+                    
                     if(verbose)
                     {
                         Console.WriteLine("Querying {0}", http);
                     }
-                    code = SendRequest(http);
+                    
+                    httpCode = SendRequest(http);
+                    if (httpCode != -1)
+                    {
+                        Console.WriteLine("{0} returned {1}", http, httpCode);
+                    }
+                    
+                    if (verbose)
+                    {
+                        Console.WriteLine("Querying {0}", https);
+                    }
+
+                    httpsCode = SendRequest(https);
                     if (code != -1)
                     {
-                        Console.WriteLine("{0} returned {1}", http, code);
+                        Console.WriteLine("{0} returned {1}", https, httpsCode);
                     }
+                    
                     // time out
-                    if(code == -1)
+                    if(httpCode == -1 && httpsCode == -1)
                     {
                         if (verbose)
                         {
                             Console.WriteLine("Skipping this port since it timed out.");
                         }
                         break;
-                    }
-                    if (verbose)
-                    {
-                        Console.WriteLine("Querying {0}", https);
-                    }
-
-                    code = SendRequest(https);
-                    if (code != -1)
-                    {
-                        Console.WriteLine("{0} returned {1}", https, code);
                     }
                     
                 }
