@@ -1,4 +1,4 @@
-# Thanks to rvrsh3ll for the idea https://github.com/rvrsh3ll/Misc-Powershell-Scripts/blob/master/Find-Fruit.ps1
+// Thanks to rvrsh3ll for the idea https://github.com/rvrsh3ll/Misc-Powershell-Scripts/blob/master/Find-Fruit.ps1
 
 using System;
 using System.Collections.Generic;
@@ -21,7 +21,7 @@ namespace ConnectTo
             List<string> ips = new List<string>();
 
             long current = ip & mask;
-            while(current <= ((ip & mask) | ~mask))
+            while (current <= ((ip & mask) | ~mask))
             {
                 current++;
                 ips.Add(ToAddr(current));
@@ -42,39 +42,39 @@ namespace ConnectTo
 
         static void ScanHost(string host, string[] ports)
         {
-            foreach(string port in ports)
+            foreach (string port in ports)
             {
-                foreach(string url in GetUrls())
+                foreach (string url in GetUrls())
                 {
                     string http = String.Format("http://{0}:{1}/{2}", host, port, url);
                     string https = String.Format("https://{0}:{1}/{2}", host, port, url);
                     int httpCode = 404;
                     int httpsCode = 404;
-                    
-                    if(verbose)
+
+                    if (verbose)
                     {
                         Console.WriteLine("Querying {0}", http);
                     }
-                    
+
                     httpCode = SendRequest(http);
                     if (httpCode != -1)
                     {
                         Console.WriteLine("{0} returned {1}", http, httpCode);
                     }
-                    
+
                     if (verbose)
                     {
                         Console.WriteLine("Querying {0}", https);
                     }
 
                     httpsCode = SendRequest(https);
-                    if (code != -1)
+                    if (httpsCode != -1)
                     {
                         Console.WriteLine("{0} returned {1}", https, httpsCode);
                     }
-                    
+
                     // time out
-                    if(httpCode == -1 && httpsCode == -1)
+                    if (httpCode == -1 && httpsCode == -1)
                     {
                         if (verbose)
                         {
@@ -82,7 +82,7 @@ namespace ConnectTo
                         }
                         break;
                     }
-                    
+
                 }
             }
         }
@@ -100,14 +100,15 @@ namespace ConnectTo
                 HttpWebResponse response = (HttpWebResponse)wr.GetResponse();
                 return Int32.Parse(response.StatusCode.ToString());
 
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
-                if(e.Message.Contains("The operation has timed out"))
+                if (e.Message.Contains("The operation has timed out"))
                 {
                     responseCode = -1;
                 }
 
-                if(verbose)
+                if (verbose)
                 {
                     Console.WriteLine("Error: {0}", e.Message);
                 }
@@ -132,7 +133,7 @@ namespace ConnectTo
             urls.Add("script/");
             urls.Add("opennms/");
             urls.Add("RDWeb/Pages/en-US/Default.aspx");
-            urls.Add("eam/vib"); 
+            urls.Add("eam/vib");
             urls.Add("wps/portal/Home");
             urls.Add("wps/myportal/");
 
@@ -143,14 +144,14 @@ namespace ConnectTo
         {
             string[] ips = RangeToIPs(args[0]);
             string[] ports = args[1].Split(',');
-            if(Array.Exists(args, match => match.ToLower() == "-verbose"))
+            if (Array.Exists(args, match => match.ToLower() == "-verbose"))
             {
                 verbose = true;
             }
 
             System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 
-            foreach(string ip in ips)
+            foreach (string ip in ips)
             {
                 Console.WriteLine("Querying {0}", ip);
                 ScanHost(ip, ports);
