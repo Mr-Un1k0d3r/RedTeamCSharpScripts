@@ -353,22 +353,23 @@ namespace LdapUtility
 
                     try
                     {
-                        computername = "(name=*" + args[2] + "*)";
+                        computername = args[2];
+                        DumpRemoteSession(computername);
                     }
                     catch
                     {
-                        computername = "";
-                    }
-
-                    try
-                    {
-                        query = "(&(objectClass=computer)" + computername + ")";
+                        query = "(&(objectClass=computer))";
                         List<string> computers = LdapQuery(domain, query, properties, false, true);
                         Console.WriteLine(String.Format("Querying {0} computer(s).", computers.Count));
                         foreach (string c in computers)
                         {
                             DumpRemoteSession(c);
                         }
+                    }
+
+                    try
+                    {
+
                     }
                     catch (Exception e)
                     {
@@ -430,7 +431,7 @@ namespace LdapUtility
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("ERROR: DumpLapsPassword catched an unexpected exception");
+                        Console.WriteLine("ERROR: CheckAdmin catched an unexpected exception");
                         ShowDebug(e, verboseDebug);
                     }
                 }
