@@ -25,7 +25,7 @@ DumpPasswordPolicy  Dump domain password policy
 CheckManaged        Check GPOs for managedby objects    
 DumpLapsPassword    Try to get LAPS password   
 DumpUserPassword    Try to exact userPassword attribute
-DumpNetSession      Dump remote active session
+DumpRemoteSession   Dump remote active session
 ```
 
 ```
@@ -49,7 +49,7 @@ ldaputility.exe DumpLastLogon RingZer0
 ldaputility.exe CheckManaged RingZer0
 ldaputility.exe DumpLapsPassword RingZer0 *optional*computername  
 ldaputility.exe DumpUserPassword RingZer0   
-ldaputility.exe DumpNetSession RingZer0  *optional*computername   
+ldaputility.exe DumpRemoteSession RingZer0  *optional*computername   
 ```
 
 The `-verbose` switch can be added to get verbose output.
