@@ -1,3 +1,55 @@
+ /*   
+    # arguments for NetSessionEnum
+    $QueryLevel = 10
+    $ptrInfo = [IntPtr]::Zero
+    $EntriesRead = 0
+    $TotalRead = 0
+    $ResumeHandle = 0
+
+    # get session information
+    $Result = $Netapi32::NetSessionEnum($HostName, '', $UserName, $QueryLevel,[ref]$ptrInfo, -1,[ref]$EntriesRead,[ref]$TotalRead,[ref]$ResumeHandle)
+
+    # Locate the offset of the initial intPtr
+    $offset = $ptrInfo.ToInt64()
+
+
+    Write - Debug "Get-NetSessions result: $Result"
+
+    # 0 = success
+if (($Result - eq 0) -and($offset - gt 0)) {
+        
+        # Work out how mutch to increment the pointer by finding out the size of the structure
+        $Increment = $SESSION_INFO_10::GetSize()
+ 
+        # parse all the result structures
+for ($i = 0; ($i - lt $EntriesRead) ; $i++){
+            # create a new int ptr at the given offset and cast 
+            # the pointer as our result structure
+            $newintptr = New - Object system.Intptr - ArgumentList $offset
+              $Info = $newintptr -as $SESSION_INFO_10
+              # return all the sections of the structure
+            $Info | Select - Object *
+              $offset = $newintptr.ToInt64()
+              $offset += $increment
+          }
+        # free up the result buffer
+        $Netapi32::NetApiBufferFree($PtrInfo) | Out - Null
+     }
+    else
+{
+    switch ($Result) {
+        (5)           { Write - Debug 'The user does not have access to the requested information.'}
+        (124)         { Write - Debug 'The value specified for the level parameter is not valid.'}
+        (87)          { Write - Debug 'The specified parameter is not valid.'}
+        (234)         { Write - Debug 'More entries are available. Specify a large enough buffer to receive all entries.'}
+        (8)           { Write - Debug 'Insufficient memory is available.'}
+        (2312)        { Write - Debug 'A session does not exist with the computer name.'}
+        (2351)        { Write - Debug 'The computer name is not valid.'}
+        (2221)        { Write - Debug 'Username not found.'}
+        (53)          { Write - Debug 'Hostname could not be found'}
+    }
+
+*/
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -23,10 +75,13 @@ namespace LdapUtility
         static extern IntPtr GetConsoleWindow();
 
         [DllImport("Netapi32.dll")]
-        static extern int NetLocalGroupEnum([MarshalAs(UnmanagedType.LPWStr)] string computerName, int level,  out IntPtr bufPtr, int prefMaxLen, out int entriesRead, out int totalEntries, ref int resumeHandle);
+        static extern int NetLocalGroupEnum([MarshalAs(UnmanagedType.LPWStr)] string computerName, int level, out IntPtr bufPtr, int prefMaxLen, out int entriesRead, out int totalEntries, ref int resumeHandle);
 
         [DllImport("netapi32.dll")]
         static extern int NetLocalGroupGetMembers([MarshalAs(UnmanagedType.LPWStr)] string computerName, [MarshalAs(UnmanagedType.LPWStr)] string localGroupName, int level, out IntPtr bufPtr, int prefMaxLen, out int entriesRead, out int totalEntries, ref int resumeHandle);
+
+        [DllImport("netapi32.dll")]
+        private static extern int NetSessionEnum([In, MarshalAs(UnmanagedType.LPWStr)] string ServerName, [MarshalAs(UnmanagedType.LPWStr)] string UncClientName, [MarshalAs(UnmanagedType.LPWStr)] string UserName,  Int32 Level,  out IntPtr bufptr, int prefmaxlen, out int entriesRead, out int totalEntries, ref int resumeHandle);
 
         [DllImport("Netapi32.dll")]
         static extern uint NetApiBufferFree(IntPtr buffer);
@@ -53,6 +108,15 @@ namespace LdapUtility
             [MarshalAs(UnmanagedType.LPWStr)] public string lgrmi2_domainandname;
         }
 
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        struct SESSION_INFO_10
+        {
+            public string sesi10_cname;
+            public string sesi10_username;
+            public int sesi10_time;
+            public int sesi10_idle_time;
+        }
+
         static int NERR_Success = 0;
         static int MAX_PREFERRED_LENGTH = -1;
         static uint SC_MANAGER_ALL_ACCESS = 0xF003F;
@@ -65,7 +129,7 @@ namespace LdapUtility
                 Console.WriteLine("DEBUG: {0}", e.Message.ToString());
             }
         }
-        
+
         static void DumpLocalAdminGroups(string computer)
         {
             IntPtr bufPtr = IntPtr.Zero;
@@ -75,7 +139,7 @@ namespace LdapUtility
             int output = NetLocalGroupEnum(computer, 1, out bufPtr, MAX_PREFERRED_LENGTH, out entriesRead, out totalEntries, ref resumeHandle);
             long offset = bufPtr.ToInt64();
 
-            if(output == NERR_Success && offset > 0)
+            if (output == NERR_Success && offset > 0)
             {
                 int position = Marshal.SizeOf(typeof(LOCALGROUP_USERS_INFO_1));
                 Console.WriteLine("\nComputer {0}\n------------------------", computer);
@@ -88,9 +152,35 @@ namespace LdapUtility
                     DumpLocalAdminMembers(computer, data.name);
                 }
                 NetApiBufferFree(bufPtr);
-            } else
+            }
+            else
             {
                 Console.WriteLine("Error: Could not list local group for the {0} system. Error {1}.", computer, output);
+            }
+        }
+
+        static void DumpRemoteSession(string computer)
+        {
+            IntPtr bufPtr = IntPtr.Zero;
+            int entriesRead = 0;
+            int totalEntries = 0;
+            int resumeHandle = 0;
+            int output = NetSessionEnum(computer, "", "", 10, out bufPtr, MAX_PREFERRED_LENGTH, out entriesRead, out totalEntries, ref resumeHandle);
+            long offset = bufPtr.ToInt64();
+
+            if (output == NERR_Success && offset > 0)
+            {
+                int position = Marshal.SizeOf(typeof(SESSION_INFO_10));
+                Console.WriteLine("\nComputer {0}\n------------------------", computer);
+                for (int i = 0; i < entriesRead; i++)
+                {
+                    IntPtr nextPtr = new IntPtr(offset);
+                    SESSION_INFO_10 data = (SESSION_INFO_10)Marshal.PtrToStructure(nextPtr, typeof(SESSION_INFO_10));
+                    offset = nextPtr.ToInt64() + position;
+                    Console.WriteLine("sesi10_cname: {0}", data.sesi10_cname);
+                    Console.WriteLine("sesi10_username: {0}", data.sesi10_username);
+                }
+                NetApiBufferFree(bufPtr);
             }
         }
 
@@ -124,7 +214,7 @@ namespace LdapUtility
             {
                 Console.WriteLine("{0} admin on: {1}", WindowsIdentity.GetCurrent().Name, computer);
                 CloseServiceHandle(handle);
-            } 
+            }
         }
 
         static string FormatProperties(ResultPropertyValueCollection r)
@@ -177,7 +267,7 @@ namespace LdapUtility
                             sb.Append(prop + new string(' ', 20 - prop.Length) + ": ");
                             sb.Append(item > 1 ? "[" + FormatProperties(r.Properties[prop]) + "]" : FormatTime(r.Properties[prop][0]));
                             sb.Append("\r\n");
-                            if(returnList)
+                            if (returnList)
                             {
                                 output.Add(r.Properties[prop][0].ToString());
                             }
@@ -284,8 +374,9 @@ namespace LdapUtility
 
                     try
                     {
-                          computername = "(name=*" + args[2] + "*)";
-                    } catch
+                        computername = "(name=*" + args[2] + "*)";
+                    }
+                    catch
                     {
                         computername = "";
                     }
@@ -303,6 +394,37 @@ namespace LdapUtility
                     catch (Exception e)
                     {
                         Console.WriteLine("ERROR: DumpLocalGroup catched an unexpected exception");
+                        ShowDebug(e, verboseDebug);
+                    }
+                }
+                else if (option == "dumpremotesession")
+                {
+                    string query = "";
+                    string properties = "name";
+                    string computername = "";
+
+                    try
+                    {
+                        computername = "(name=*" + args[2] + "*)";
+                    }
+                    catch
+                    {
+                        computername = "";
+                    }
+
+                    try
+                    {
+                        query = "(&(objectClass=computer)" + computername + ")";
+                        List<string> computers = LdapQuery(domain, query, properties, false, true);
+                        Console.WriteLine(String.Format("Querying {0} computer(s).", computers.Count));
+                        foreach (string c in computers)
+                        {
+                            DumpRemoteSession(c);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("ERROR: DumpRemoteSession catched an unexpected exception");
                         ShowDebug(e, verboseDebug);
                     }
                 }
@@ -335,6 +457,32 @@ namespace LdapUtility
                     catch (Exception e)
                     {
                         Console.WriteLine("ERROR: DumpLocalAdmin catched an unexpected exception");
+                        ShowDebug(e, verboseDebug);
+                    }
+                }
+                else if (option == "dumplapspassword")
+                {
+                    string query = "";
+                    string properties = "name,ms-mcs-AdmPwd";
+                    string computername = "";
+
+                    try
+                    {
+                        computername = "(name=*" + args[2] + "*)";
+                    }
+                    catch
+                    {
+                        computername = "";
+                    }
+
+                    try
+                    {
+                        query = "(&(objectClass=user)" + computername + ")";
+                        LdapQuery(domain, query, properties);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("ERROR: DumpLapsPassword catched an unexpected exception");
                         ShowDebug(e, verboseDebug);
                     }
                 }
@@ -412,6 +560,21 @@ namespace LdapUtility
                     catch (Exception e)
                     {
                         Console.WriteLine("ERROR: DumpUsersEmail catched an unexpected exception");
+                        ShowDebug(e, verboseDebug);
+                    }
+                }
+                else if (option == "dumpuserpassword")
+                {
+                    string query = "";
+                    string properties = "name,samaccountname,userpassword";
+                    try
+                    {
+                        query = "(&(objectClass=user))";
+                        LdapQuery(domain, query, properties);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("ERROR: DumpUserPassword catched an unexpected exception");
                         ShowDebug(e, verboseDebug);
                     }
                 }
