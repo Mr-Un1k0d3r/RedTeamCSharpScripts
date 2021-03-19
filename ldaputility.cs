@@ -350,26 +350,25 @@ namespace LdapUtility
                     string query = "";
                     string properties = "name";
                     string computername = "";
-
                     try
                     {
-                        computername = args[2];
-                        DumpRemoteSession(computername);
-                    }
-                    catch
-                    {
-                        query = "(&(objectClass=computer))";
-                        List<string> computers = LdapQuery(domain, query, properties, false, true);
-                        Console.WriteLine(String.Format("Querying {0} computer(s).", computers.Count));
-                        foreach (string c in computers)
+
+
+                        try
                         {
-                            DumpRemoteSession(c);
+                            computername = args[2];
+                            DumpRemoteSession(computername);
                         }
-                    }
-
-                    try
-                    {
-
+                        catch
+                        {
+                            query = "(&(objectClass=computer))";
+                            List<string> computers = LdapQuery(domain, query, properties, false, true);
+                            Console.WriteLine(String.Format("Querying {0} computer(s).", computers.Count));
+                            foreach (string c in computers)
+                            {
+                                DumpRemoteSession(c);
+                            }
+                        }
                     }
                     catch (Exception e)
                     {
