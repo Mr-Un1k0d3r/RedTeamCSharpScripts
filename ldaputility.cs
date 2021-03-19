@@ -29,8 +29,7 @@ namespace LdapUtility
         static extern int NetLocalGroupGetMembers([MarshalAs(UnmanagedType.LPWStr)] string computerName, [MarshalAs(UnmanagedType.LPWStr)] string localGroupName, int level, out IntPtr bufPtr, int prefMaxLen, out int entriesRead, out int totalEntries, ref int resumeHandle);
 
         [DllImport("netapi32.dll")]
-        private static extern int NetSessionEnum([In, MarshalAs(UnmanagedType.LPWStr)] string ServerName, [MarshalAs(UnmanagedType.LPWStr)] string UncClientName, [MarshalAs(UnmanagedType.LPWStr)] string UserName,  Int32 Level,  out IntPtr bufptr, int prefmaxlen, out int entriesRead, out int totalEntries, ref int resumeHandle);
-
+        private static extern int NetSessionEnum([In, MarshalAs(UnmanagedType.LPWStr)] string ServerName, [In, MarshalAs(UnmanagedType.LPWStr)] string UncClientName, [In, MarshalAs(UnmanagedType.LPWStr)] string UserName, Int32 Level, out IntPtr bufptr, int prefmaxlen, ref Int32 entriesread, ref Int32 totalentries, ref Int32 resume_handle);
         [DllImport("Netapi32.dll")]
         static extern uint NetApiBufferFree(IntPtr buffer);
 
@@ -59,8 +58,8 @@ namespace LdapUtility
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         struct SESSION_INFO_10
         {
-            public string sesi10_cname;
-            public string sesi10_username;
+            [MarshalAs(UnmanagedType.LPWStr)] public string sesi10_cname;
+            [MarshalAs(UnmanagedType.LPWStr)] public string sesi10_username;
             public int sesi10_time;
             public int sesi10_idle_time;
         }
@@ -113,13 +112,14 @@ namespace LdapUtility
             int entriesRead = 0;
             int totalEntries = 0;
             int resumeHandle = 0;
-            int output = NetSessionEnum(computer, "", "", 10, out bufPtr, MAX_PREFERRED_LENGTH, out entriesRead, out totalEntries, ref resumeHandle);
+            int output = NetSessionEnum(computer, null, null, 10, out bufPtr, -1, ref entriesRead, ref totalEntries, ref resumeHandle);
             long offset = bufPtr.ToInt64();
 
+            Console.WriteLine("\nComputer {0}\n------------------------", computer);
             if (output == NERR_Success && offset > 0)
             {
                 int position = Marshal.SizeOf(typeof(SESSION_INFO_10));
-                Console.WriteLine("\nComputer {0}\n------------------------", computer);
+                
                 for (int i = 0; i < entriesRead; i++)
                 {
                     IntPtr nextPtr = new IntPtr(offset);
