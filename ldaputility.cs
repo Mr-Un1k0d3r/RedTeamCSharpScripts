@@ -302,6 +302,7 @@ namespace LdapUtility
 
                 if(option == "passwordbruteforce")
                 {
+                    Console.WriteLine("Starting password brute force");
                     string query = "";
                     string properties = "samaccountname";
                     string filter = "";
@@ -319,9 +320,9 @@ namespace LdapUtility
                     {
                         query = "(&(objectClass=user)" + filter + ")";
                         List<string> users = LdapQuery(domain, query, properties, false, true);
-                        foreach(string u in users)
-                        {
-                            Console.WriteLine(u);
+                        Console.WriteLine("Bruteforcing {0} accounts", users.Count);
+                        foreach (string u in users)
+                        {;
                             using (PrincipalContext pc = new PrincipalContext(ContextType.Domain, domain))
                             {
                                 if(verboseDebug)
