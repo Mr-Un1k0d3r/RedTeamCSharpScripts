@@ -26,6 +26,7 @@ CheckManaged        Check GPOs for managedby objects
 DumpLapsPassword    Try to get LAPS password   
 DumpUserPassword    Try to exact userPassword attribute
 DumpRemoteSession   Dump remote active session
+PasswordBruteForce  Attempt password brute force 
 ```
 
 ```
@@ -49,7 +50,8 @@ ldaputility.exe DumpLastLogon RingZer0
 ldaputility.exe CheckManaged RingZer0
 ldaputility.exe DumpLapsPassword RingZer0 *optional*computername  
 ldaputility.exe DumpUserPassword RingZer0   
-ldaputility.exe DumpRemoteSession RingZer0  *optional*computername   
+ldaputility.exe DumpRemoteSession RingZer0  *optional*computername  
+ldaputility.exe PasswordBruteForce RingZer0 *optional*username (samaccountname) 
 ```
 
 The `-verbose` switch can be added to get verbose output.
