@@ -46,43 +46,45 @@ namespace ConnectTo
             {
                 foreach (string url in GetUrls())
                 {
-                    string http = String.Format("http://{0}:{1}/{2}", host, port, url);
-                    string https = String.Format("https://{0}:{1}/{2}", host, port, url);
-                    int httpCode = 404;
-                    int httpsCode = 404;
-
-                    if (verbose)
+                    Task t = Task.Run(() =>
                     {
-                        Console.WriteLine("Querying {0}", http);
-                    }
+                        string http = String.Format("http://{0}:{1}/{2}", host, port, url);
+                        string https = String.Format("https://{0}:{1}/{2}", host, port, url);
+                        int httpCode = 404;
+                        int httpsCode = 404;
 
-                    httpCode = SendRequest(http);
-                    if (httpCode != -1)
-                    {
-                        Console.WriteLine("{0} returned {1}", http, httpCode);
-                    }
-
-                    if (verbose)
-                    {
-                        Console.WriteLine("Querying {0}", https);
-                    }
-
-                    httpsCode = SendRequest(https);
-                    if (httpsCode != -1)
-                    {
-                        Console.WriteLine("{0} returned {1}", https, httpsCode);
-                    }
-
-                    // time out
-                    if (httpCode == -1 && httpsCode == -1)
-                    {
                         if (verbose)
                         {
-                            Console.WriteLine("Skipping this port since it timed out.");
+                            Console.WriteLine("Querying {0}", http);
                         }
-                        break;
-                    }
 
+                        httpCode = SendRequest(http);
+                        if (httpCode != -1)
+                        {
+                            Console.WriteLine("{0} returned {1}", http, httpCode);
+                        }
+
+                        if (verbose)
+                        {
+                            Console.WriteLine("Querying {0}", https);
+                        }
+
+                        httpsCode = SendRequest(https);
+                        if (httpsCode != -1)
+                        {
+                            Console.WriteLine("{0} returned {1}", https, httpsCode);
+                        }
+
+                        // time out
+                        if (httpCode == -1 && httpsCode == -1)
+                        {
+                            if (verbose)
+                            {
+                                Console.WriteLine("Skipping this port since it timed out.");
+                            }
+                            return;
+                        }
+                    });
                 }
             }
         }
@@ -142,6 +144,7 @@ namespace ConnectTo
 
         static void Main(string[] args)
         {
+            ThreadPool.SetMaxThreads(20, 20);
             string[] ips = RangeToIPs(args[0]);
             string[] ports = args[1].Split(',');
             if (Array.Exists(args, match => match.ToLower() == "-verbose"))
