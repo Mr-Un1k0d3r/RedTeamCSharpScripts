@@ -1,6 +1,0 @@
-Z:\Users\Exclusions\WindowsTools\ldapquery\ldapquery\bin\Debug\ldapquery.exe
-Z:\Users\Exclusions\WindowsTools\ldapquery\ldapquery\bin\Debug\ldapquery.pdb
-Z:\Users\Exclusions\WindowsTools\ldapquery\ldapquery\obj\Debug\ldapquery.csprojAssemblyReference.cache
-Z:\Users\Exclusions\WindowsTools\ldapquery\ldapquery\obj\Debug\ldapquery.csproj.CoreCompileInputs.cache
-Z:\Users\Exclusions\WindowsTools\ldapquery\ldapquery\obj\Debug\ldapquery.exe
-Z:\Users\Exclusions\WindowsTools\ldapquery\ldapquery\obj\Debug\ldapquery.pdb
