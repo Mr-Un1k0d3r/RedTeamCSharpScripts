@@ -27,6 +27,8 @@ DumpLapsPassword    Try to get LAPS password
 DumpUserPassword    Try to exact userPassword attribute
 DumpRemoteSession   Dump remote active session
 PasswordBruteForce  Attempt password brute force 
+GetShare            List local or remote shares
+GetService          List local or remote service
 ```
 
 ```
@@ -52,6 +54,8 @@ ldaputility.exe DumpLapsPassword RingZer0 *optional*computername
 ldaputility.exe DumpUserPassword RingZer0   
 ldaputility.exe DumpRemoteSession RingZer0  *optional*computername  
 ldaputility.exe PasswordBruteForce RingZer0 *optional*username (samaccountname) 
+ldaputility.exe GetShare target *optional*Domain\Username Password
+ldaputility.exe GetService target *optional*Domain\Username Password
 ```
 
 The `-verbose` switch can be added to get verbose output.

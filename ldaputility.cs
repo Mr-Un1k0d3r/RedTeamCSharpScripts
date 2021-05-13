@@ -12,12 +12,34 @@ using System.DirectoryServices.AccountManagement;
 using System.IO;
 using System.Collections;
 using System.Security.Principal;
+using System.ServiceProcess;
 
 namespace LdapUtility
 {
 
     class Program
     {
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct SHARE_INFO_1
+        {
+            public string shi1_netname;
+            public uint shi1_type;
+            public string shi1_remark;
+            public SHARE_INFO_1(string sharename, uint sharetype, string remark)
+            {
+                this.shi1_netname = sharename;
+                this.shi1_type = sharetype;
+                this.shi1_remark = remark;
+            }
+            public override string ToString()
+            {
+                return shi1_netname;
+            }
+        }
+
+        [DllImport("kernel32.dll")]
+        public static extern uint GetLastError();
+
         [DllImport("user32.dll")]
         static extern bool ShowWindow(IntPtr a, UInt32 b);
 
@@ -25,10 +47,20 @@ namespace LdapUtility
         static extern IntPtr GetConsoleWindow();
 
         [DllImport("Netapi32.dll")]
-        static extern int NetLocalGroupEnum([MarshalAs(UnmanagedType.LPWStr)] string computerName, int level, out IntPtr bufPtr, int prefMaxLen, out int entriesRead, out int totalEntries, ref int resumeHandle);
+        static extern int NetLocalGroupEnum([In, MarshalAs(UnmanagedType.LPWStr)] string computerName, int level, out IntPtr bufPtr, int prefMaxLen, out int entriesRead, out int totalEntries, ref int resumeHandle);
 
         [DllImport("netapi32.dll")]
-        static extern int NetLocalGroupGetMembers([MarshalAs(UnmanagedType.LPWStr)] string computerName, [MarshalAs(UnmanagedType.LPWStr)] string localGroupName, int level, out IntPtr bufPtr, int prefMaxLen, out int entriesRead, out int totalEntries, ref int resumeHandle);
+        static extern int NetLocalGroupGetMembers([In, MarshalAs(UnmanagedType.LPWStr)] string computerName, [In, MarshalAs(UnmanagedType.LPWStr)] string localGroupName, int level, out IntPtr bufPtr, int prefMaxLen, out int entriesRead, out int totalEntries, ref int resumeHandle);
+
+        [DllImport("advapi32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool LogonUser([In, MarshalAs(UnmanagedType.LPStr)] string lpszUsername, [In, MarshalAs(UnmanagedType.LPStr)] string lpszDomain, [In, MarshalAs(UnmanagedType.LPStr)] string lpszPassword, int dwLogonType, int dwLogonProvider, ref IntPtr phToken);
+
+        [DllImport("advapi32.dll")]
+        static extern bool ImpersonateLoggedOnUser(IntPtr hToken);
+
+        [DllImport("Netapi32.dll", CharSet = CharSet.Unicode)]
+        private static extern int NetShareEnum(string ServerName, int level, ref IntPtr bufPtr, uint prefmaxlen, ref int entriesread, ref int totalentries, ref int resume_handle);
 
         [DllImport("netapi32.dll")]
         private static extern int NetSessionEnum([In, MarshalAs(UnmanagedType.LPWStr)] string ServerName, [In, MarshalAs(UnmanagedType.LPWStr)] string UncClientName, [In, MarshalAs(UnmanagedType.LPWStr)] string UserName, Int32 Level, out IntPtr bufptr, int prefmaxlen, ref Int32 entriesread, ref Int32 totalentries, ref Int32 resume_handle);
@@ -302,7 +334,7 @@ namespace LdapUtility
                 string option = args[0].ToLower();
                 string domain = args[1];
 
-                if(option == "passwordbruteforce")
+                if (option == "passwordbruteforce")
                 {
                     Console.WriteLine("Starting password brute force");
                     string query = "";
@@ -680,7 +712,6 @@ namespace LdapUtility
                 else if (option == "checkmanaged")
                 {
                     /*
-
                     */
                     if (ListFilesSearchForManaged("\\\\" + domain + "\\SYSVOL", verboseDebug))
                     {
@@ -732,6 +763,100 @@ namespace LdapUtility
                         Console.WriteLine("ERROR: DumpPasswordPolicy catched an unexpected exception");
                         ShowDebug(e, verboseDebug);
                     }
+                }
+                else if (option == "getshare")
+                {
+                    string hostname = args[1];
+                    string username = "";
+                    string password = "";
+
+                    if (args.Length > 2)
+                    {
+                        username = args[2].Split('\\')[1];
+                        domain = args[2].Split('\\')[0];
+                        password = args[3];
+                        const int LOGON32_LOGON_NEW_CREDENTIALS = 9;
+                        const int LOGON32_PROVIDER_DEFAULT = 0;
+                        IntPtr phToken = IntPtr.Zero;
+
+                        bool bResult = false;
+                        if (username != null)
+                        {
+                            bResult = LogonUser(username, domain, password, LOGON32_LOGON_NEW_CREDENTIALS, LOGON32_PROVIDER_DEFAULT, ref phToken);
+                            if (!bResult)
+                            {
+                                Console.WriteLine("Error: " + GetLastError());
+                            }
+                        }
+                        bResult = ImpersonateLoggedOnUser(phToken);
+                        if (!bResult)
+                        {
+                            Console.WriteLine("Error: " + GetLastError());
+                        }
+                    }
+
+                    int entriesread = 0;
+                    int totalentries = 0;
+                    int resume_handle = 0;
+
+                    int structSize = Marshal.SizeOf(typeof(SHARE_INFO_1));
+                    IntPtr bufPtr = IntPtr.Zero;
+
+                    int ret = NetShareEnum(hostname, 1, ref bufPtr, 0xFFFFFFFF, ref entriesread, ref totalentries, ref resume_handle);
+
+                    if (ret == 0)
+                    {
+                        IntPtr currentPtr = bufPtr;
+
+                        for (int i = 0; i < entriesread; i++)
+                        {
+                            SHARE_INFO_1 shi1 = (SHARE_INFO_1)Marshal.PtrToStructure(currentPtr, typeof(SHARE_INFO_1));
+                            Console.WriteLine("\\\\{0}\\{1}", hostname, shi1);
+                            currentPtr += structSize;
+                        }
+
+                    }
+
+                }
+                else if (option == "getservice")
+                {
+
+                    string hostname = args[1];
+                    string username = "";
+                    string password = "";
+
+                    if (args.Length > 2)
+                    {
+                        username = args[2].Split('\\')[1];
+                        domain = args[2].Split('\\')[0];
+                        password = args[3];
+                        const int LOGON32_LOGON_NEW_CREDENTIALS = 9;
+                        const int LOGON32_PROVIDER_DEFAULT = 0;
+                        IntPtr phToken = IntPtr.Zero;
+
+                        bool bResult = false;
+                        if (username != null)
+                        {
+                            bResult = LogonUser(username, domain, password, LOGON32_LOGON_NEW_CREDENTIALS, LOGON32_PROVIDER_DEFAULT, ref phToken);
+                            if (!bResult)
+                            {
+                                Console.WriteLine("Error: " + GetLastError());
+                            }
+                        }
+                        bResult = ImpersonateLoggedOnUser(phToken);
+                        if (!bResult)
+                        {
+                            Console.WriteLine("Error: " + GetLastError());
+                        }
+                    }
+
+                    ServiceController[] services = ServiceController.GetServices(hostname);
+
+                    foreach (ServiceController service in services)
+                    {
+                        Console.WriteLine("{0}:{1}", service.ServiceName, service.Status);
+                    }
+
                 }
                 else
                 {
