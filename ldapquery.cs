@@ -32,7 +32,20 @@ namespace LdapQuery
                         StringBuilder sb = new StringBuilder();
                         foreach (string prop in properties.Split(','))
                         {
-                            sb.Append(r.Properties[prop].Count > 0 ? r.Properties[prop][0] : String.Empty);
+                            if(r.Properties[prop].Count > 0)
+                            {
+                                int propCount = 0;
+                                foreach (var property in r.Properties[prop])
+                                {
+                                    if (propCount > 0)
+                                    {
+                                        sb.Append(";");
+                                    }
+                                    sb.Append(property.ToString());
+                                    propCount++;
+                                }                                
+                            }
+                            //sb.Append(r.Properties[prop].Count > 0 ? r.Properties[prop][0] : String.Empty);
                             sb.Append(",");
                         }
                         Console.WriteLine(sb.ToString());
