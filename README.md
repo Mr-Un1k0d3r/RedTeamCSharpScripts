@@ -54,8 +54,8 @@ ldaputility.exe DumpLapsPassword RingZer0 *optional*computername
 ldaputility.exe DumpUserPassword RingZer0   
 ldaputility.exe DumpRemoteSession RingZer0  *optional*computername  
 ldaputility.exe PasswordBruteForce RingZer0 *optional*username (samaccountname) 
-ldaputility.exe GetShare target *optional*[RingZer0\mr.un1k0der] [Summer2021]
-ldaputility.exe GetService target *optional*[RingZer0\mr.un1k0der] [Summer2021]
+ldaputility.exe GetShare target *optional*Domain\Username Password
+ldaputility.exe GetService target *optional*Domain\Username Password
 ```
 
 The `-verbose` switch can be added to get verbose output.
