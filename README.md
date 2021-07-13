@@ -12,6 +12,7 @@ The utility support the following options
 Set                 Equivalent of running set command
 DumpLocalAdmin      Dump local admin on the remote system
 DumpLocalGroup      Dump local group (ALL OF THEM bad idea)
+DumpRemoteSession   Dump remote system active sessions
 CheckAdmin          Check if current user is admin
 DumpTrust           Dump domain & forest trust
 DumpAllUsers        Dump all the users 
@@ -37,6 +38,7 @@ Usage: ldaputility.exe options domain [arguments]
 ldaputility.exe Set
 ldaputility.exe DumpLocalAdmin RingZer0 *optional*computername
 ldaputility.exe DumpLocalGroup RingZer0 *optional*computername
+ldaputility.exe DumpRemoteSession RingZer0 *optional*computername
 ldaputility.exe CheckAdmin RingZer0 *optional*computername
 ldaputility.exe DumpTrust RingZer0
 ldaputility.exe DumpAllUsers RingZer0
