@@ -4,63 +4,7 @@ C# Script used for Red Team. These binaries can be used by Cobalt Strike execute
 
 # LDAP utility
 
-LDAP utility contains several LDAP query that will return all the valuable information you are looking for.
-
-The utility support the following options
-
-```
-Set                 Equivalent of running set command
-DumpLocalAdmin      Dump local admin on the remote system
-DumpLocalGroup      Dump local group (ALL OF THEM bad idea)
-DumpRemoteSession   Dump remote system active sessions
-CheckAdmin          Check if current user is admin
-DumpTrust           Dump domain & forest trust
-DumpAllUsers        Dump all the users 
-DumpUser            Dump user information based on the samaccountname provided
-DumpUsersEmail      Dump all users and email addresses
-DumpAllComputers    Dump all computers
-DumpComputer        Dump a computer information based on the name provided
-DumpAllGroups       Dump all groups
-DumpGroup           Dump a group information based on the name provided
-DumpPasswordPolicy  Dump domain password policy
-CheckManaged        Check GPOs for managedby objects    
-DumpLapsPassword    Try to get LAPS password   
-DumpUserPassword    Try to exact userPassword attribute
-DumpRemoteSession   Dump remote active session
-PasswordBruteForce  Attempt password brute force 
-GetShare            List local or remote shares
-GetService          List local or remote service
-```
-
-```
-Usage: ldaputility.exe options domain [arguments]
-
-ldaputility.exe Set
-ldaputility.exe DumpLocalAdmin RingZer0 *optional*computername
-ldaputility.exe DumpLocalGroup RingZer0 *optional*computername
-ldaputility.exe DumpRemoteSession RingZer0 *optional*computername
-ldaputility.exe CheckAdmin RingZer0 *optional*computername
-ldaputility.exe DumpTrust RingZer0
-ldaputility.exe DumpAllUsers RingZer0
-ldaputility.exe DumpUser RingZer0 mr.un1k0d3r
-ldaputility.exe DumpUsersEmail RingZer0
-ldaputility.exe DumpAllComputers RingZer0 
-ldaputility.exe DumpComputer RingZer0 DC01
-ldaputility.exe DumpAllGroups RingZer0
-ldaputility.exe DumpGroup RingZer0 "Domain Admins"
-ldaputility.exe DumpPasswordPolicy RingZer0
-ldaputility.exe DumpPwdLastSet RingZer0
-ldaputility.exe DumpLastLogon RingZer0
-ldaputility.exe CheckManaged RingZer0
-ldaputility.exe DumpLapsPassword RingZer0 *optional*computername  
-ldaputility.exe DumpUserPassword RingZer0   
-ldaputility.exe DumpRemoteSession RingZer0  *optional*computername  
-ldaputility.exe PasswordBruteForce RingZer0 *optional*username (samaccountname) 
-ldaputility.exe GetShare target *optional*Domain\Username Password
-ldaputility.exe GetService target *optional*Domain\Username Password
-```
-
-The `-verbose` switch can be added to get verbose output.
+The utility has been renamed to AdHuntTool and moved to its own repo [https://github.com/Mr-Un1k0d3r/ADHuntTool](https://github.com/Mr-Un1k0d3r/ADHuntTool)
 
 ### The CheckManaged feature
 
