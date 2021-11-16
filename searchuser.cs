@@ -17,21 +17,42 @@ using System.DirectoryServices.ActiveDirectory;
 
 namespace EventLogParser
 {
+    public enum Options
+    {
+        username = 0,
+        domain = 1,
+        ip = 2
+    }
     class Program
     {
         static void Main(string[] args)
         {
-            string username = args[0];
-            Console.WriteLine("Searching for user '{0}'", username);
-            string xmlQuery = String.Format("<QueryList><Query Id=\"0\" Path=\"Security\"><Select Path=\"Security\">*[System[(EventID=4624)] and EventData[Data[@Name=\"TargetDomainName\"]=\"{0}\"]]</Select></Query></QueryList>", username);
+            string[] queryString = new string[]
+            {
+                "*[System[(EventID=4624)] and EventData[Data[@Name=\"TargetUserName\"]=\"{0}\"]]",
+                "*[System[(EventID=4624)] and EventData[Data[@Name=\"TargetDomainName\"]=\"{0}\"]]",
+                "*[EventData[Data[@Name=\"IpAddress\"] and(Data=\"{0}\")]]"
+            };
+            string search = args[1];
+            if(!Enum.IsDefined(typeof(Options), args[0])) {
+                Console.WriteLine("Invalid Option: username, domain, ip");
+                return;
+            }
+            Console.WriteLine("Searching for '{0}'", search);
+
+            int index = (int)Enum.Parse(typeof(Options), args[0]);
+            
+            string query = String.Format(queryString[index], search);
+
+            Console.WriteLine("Querying: {0}", query);
             foreach (DomainController target in Domain.GetCurrentDomain().DomainControllers)
             {
                 try
                 {
-                    Console.WriteLine("Parsing {0} ({1})", target.IPAddress, target.Name);
+                    Console.WriteLine("Parsing {0} ({1}) logs", target.IPAddress, target.Name);
                     EventLogSession els = new EventLogSession(target.Name);
 
-                    EventLogQuery logQuery = new EventLogQuery(null, PathType.LogName, xmlQuery);
+                    EventLogQuery logQuery = new EventLogQuery("Security", PathType.LogName, query);
                     logQuery.Session = els;
 
                     EventLogReader elr = new EventLogReader(logQuery);
@@ -43,10 +64,16 @@ namespace EventLogParser
                         {
                             break;
                         }
-                        Console.WriteLine(er.FormatDescription());
+                        Console.WriteLine(er.FormatDescription() + "\r\n-----------------------------------\r\n");
+
+                        if(er != null)
+                        {
+                            er.Dispose();
+                        }
                     }
 
-                } catch(Exception e)
+                }
+                catch (Exception e)
                 {
                     Console.WriteLine("Error: {0}", e.Message);
                 }
